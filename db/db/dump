@@ -1,2 +1,2 @@
 #!/bin/bash
-mysqldump -p$MYSQL_ROOT_PASSWORD -B fjelltopp > /db/superset_data.sql
+PGPASSWORD=$POSTGRES_PASSWORD && pg_dump -U $POSTGRES_USER -B $POSTGRES_DB > /db/superset_data.sql

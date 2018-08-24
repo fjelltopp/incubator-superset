@@ -4,4 +4,4 @@ FROM postgres:10
 ADD ./db/superset_data.sql /docker-entrypoint-initdb.d/superset_data.sql
 
 # Add dump and load scripts to path.
-ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/db
+ENV PATH=$PATH:/db

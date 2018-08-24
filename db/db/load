@@ -1,2 +1,2 @@
 #!/bin/bash
-mysql -p$MYSQL_ROOT_PASSWORD fjelltopp < /db/superset_data.sql
+PGPASSWORD=$POSTGRES_PASSWORD && psql -U $POSTGRES_USER $POSTGRES_DB < /db/superset_data.sql

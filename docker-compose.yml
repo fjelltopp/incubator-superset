@@ -18,7 +18,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - ./db/db:/db
 
   superset:
     build: superset
@@ -39,7 +39,7 @@ services:
       - postgres
       - redis
     volumes:
-      - .:/home/work/incubator-superset
+      - ./superset/superset:/home/work/incubator-superset
       - superset-node-modules:/home/work/incubator-superset/superset/assets/node_modules
 volumes:
   postgres:

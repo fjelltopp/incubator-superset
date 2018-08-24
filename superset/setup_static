@@ -1,0 +1,4 @@
+#!/bin/sh
+cd /home/work/incubator-superset/superset/assets
+yarn
+npm run build

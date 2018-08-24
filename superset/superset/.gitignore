@@ -1,6 +1,7 @@
 *.pyc
 *.swp
 yarn-error.log
+yarn.lock
 _modules
 superset/assets/coverage/*
 changelog.sh
