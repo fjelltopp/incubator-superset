@@ -7,7 +7,7 @@ read response
 if [ "$response" = "y" ] ||  [ "$response" = "y" ]
 then
     docker-compose restart
-    docker-compose exec db load
+    docker-compose exec postgres load
 fi
 
 exec <&-

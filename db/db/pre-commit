@@ -5,7 +5,7 @@ echo "Do you want to include changes to the db? (y/N)"
 read response
 if [ "$response" = "y" ] ||  [ "$response" = "y" ]
 then
-    docker-compose exec db dump
+    docker-compose exec postgres dump
     git add db/superset_data.sql
 fi
 echo "Proceeding with commit"
