@@ -1,0 +1,18 @@
+Version Controlled Database
+===========================
+
+This repository contains files to facilitate version controlling a PostgresSQL
+database.
+
+The following commands:
+    `docker-compose exec db db_dump`
+    `docker-compose exec db db_load`
+...dump the database in the db docker container to a file in incubator-superset/db.
+
+The following scripts:
+    `pre-commit`
+    `post-merge`
+    `post-checkout`
+...should be added to your incubator-superset/.git/hooks.  This will make git
+automatically ask you if you want to commit db changes to git and load db changes
+from git.  If you prefer to do this manually that is fine.

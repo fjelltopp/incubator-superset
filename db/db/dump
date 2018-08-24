@@ -1,0 +1,2 @@
+#!/bin/bash
+mysqldump -p$MYSQL_ROOT_PASSWORD -B fjelltopp > /db/superset_data.sql

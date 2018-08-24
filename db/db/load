@@ -1,0 +1,2 @@
+#!/bin/bash
+mysql -p$MYSQL_ROOT_PASSWORD fjelltopp < /db/superset_data.sql
