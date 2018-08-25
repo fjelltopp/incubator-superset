@@ -12,10 +12,10 @@
       </button>
       <a class="navbar-brand" href="/superset/profile/{{ current_user.username }}/">
         <img
-          width="126"
           src="{{ appbuilder.app_icon }}"
           alt="{{ appbuilder.app_name }}"
         />
+        <span><b>Ukraine</b> · Public Health Surveillance</span>
       </a>
     </div>
     <div class="navbar-collapse collapse">
@@ -25,9 +25,10 @@
             {{ WARNING_MSG | safe }}
           </li>
         {% endif %}
-        {% include 'appbuilder/navbar_menu.html' %}
+
       </ul>
       <ul class="nav navbar-nav navbar-right">
+        {% include 'appbuilder/navbar_menu.html' %}
         {% include 'appbuilder/navbar_right.html' %}
       </ul>
     </div>
