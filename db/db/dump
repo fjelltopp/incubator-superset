@@ -1,2 +1,0 @@
-#!/bin/bash
-PGPASSWORD=$POSTGRES_PASSWORD && pg_dump -U $POSTGRES_USER -B $POSTGRES_DB > /db/superset_data.sql
