@@ -131,45 +131,79 @@ MapGLDraw.propTypes = Object.assign({}, MapGL.propTypes, {
 });
 
 
+/* MapFilter
+ * A MapFilter component renders the map filter visualisation with all the
+ * necessary configurations and, crucially, keeps a state for the component.
+ */
+class MapFilter extends React.Component {
+
+  constructor(props) {
+    super(props);
+    longitude = this.props.json.data.viewportLongitude || DEFAULT_LONGITUDE;
+    latitude = this.props.json.data.viewportLatitude || DEFAULT_LATITUDE;
+    this.state = {
+      viewport: {
+        longitude,
+        latitude,
+        zoom: this.props.json.data.viewportZoom || DEFAULT_ZOOM,
+        startDragLngLat: [longitude, latitude],
+      },
+    };
+    this.onViewportChange = this.onViewportChange.bind(this);
+  }
+
+  onViewportChange(viewport) {
+    this.setState({ viewport });
+    this.props.setControlValue('viewport_longitude', viewport.longitude);
+    this.props.setControlValue('viewport_latitude', viewport.latitude);
+    this.props.setControlValue('viewport_zoom', viewport.zoom);
+  }
+
+  render() {
+    return (
+      <MapGLDraw
+        {...this.state.viewport}
+        mapStyle={this.props.slice.formData.mapbox_style}
+        width={this.props.slice.width()}
+        height={this.props.slice.height()}
+        mapboxApiAccessToken={this.props.json.data.mapboxApiKey}
+        geoJSON={this.props.json.data.geoJSON}
+        onViewportChange={this.onViewportChange}
+        colorCategories={getCategories(
+          this.props.slice.formData,
+          this.props.json.data.geoJSON.features,
+        )}
+      >
+        <Legend categories={colors} position="br" />
+      </MapGLDraw>
+    );
+  }
+}
+
+MapFilter.propTypes = {
+  json: PropTypes.object,
+  slice: PropTypes.object,
+  setControlValue: PropTypes.function,
+};
+
+
 /* mapFilter(slice, json, setControlValue)
  *
  * This is the hook called by superset to render the visualisation.  We are
  * given data associated with the slice and the JSON returned from the backend.
+ * For simplicity all this data is passed to the MapFilter component.
  */
 function mapFilter(slice, json, setControlValue) {
-
-  const longitude = json.data.viewportLongitude || DEFAULT_LONGITUDE;
-  const latitude = json.data.viewportLatitude || DEFAULT_LATITUDE;
-  const initialViewport = {
-    longitude,
-    latitude,
-    zoom: json.data.viewportZoom || DEFAULT_ZOOM,
-    startDragLngLat: [longitude, latitude],
-    onViewportChange: (viewport) => {
-      setControlValue('viewport_longitude', viewport.longitude);
-      setControlValue('viewport_latitude', viewport.latitude);
-      setControlValue('viewport_zoom', viewport.zoom);
-    },
-  };
-  const colors =  getCategories(
-    slice.formData,
-    json.data.geoJSON.features,
-  );
 
   const div = d3.select(slice.selector);
   div.selectAll('*').remove();
 
   ReactDOM.render(
-    <MapGLDraw
-      {...initialViewport}
-      mapStyle={slice.formData.mapbox_style}
-      width={slice.width()}
-      height={slice.height()}
-      mapboxApiAccessToken={json.data.mapboxApiKey}
-      geoJSON={json.data.geoJSON}
-    >
-      <Legend categories={colors} position="br" />
-    </MapGLDraw>,
+    <MapFilter
+      json={json}
+      slice={slice}
+      setControlValue={setControlValue || NOOP}
+    />,
     div.node(),
   );
 }
