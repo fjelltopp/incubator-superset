@@ -654,7 +654,6 @@ class SqlaTable(Model, BaseDatasource):
             col_obj = cols.get(col)
             if col_obj:
                 is_list_target = op in ('in', 'not in')
-                logging.info(op)
                 if op in ["geo_within"]:
                     features = flt.get('val')["features"]
 
@@ -673,9 +672,9 @@ class SqlaTable(Model, BaseDatasource):
                         target_column_is_numeric=col_obj.is_num,
                         is_list_target=is_list_target)
                     if op in ('in', 'not in'):
-                        cond = col_obj.get_sqla_col.in_(eq)
+                        cond = col_obj.get_sqla_col().in_(eq)
                         if '<NULL>' in eq:
-                            cond = or_(cond, col_obj.get_sqla_col == None)  # noqa
+                            cond = or_(cond, col_obj.get_sqla_col() == None)  # noqa
                         if op == 'not in':
                             cond = ~cond
                         where_clause_and.append(cond)
