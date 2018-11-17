@@ -103,6 +103,10 @@ class BaseDatasource(AuditMixinNullable, ImportMixin):
         return sorted([c.column_name for c in self.columns if c.filterable])
 
     @property
+    def geofilterable_column_names(self):
+        return sorted([c.column_name for c in self.columns if c.geofilterable])
+
+    @property
     def dttm_cols(self):
         return []
 
@@ -201,6 +205,7 @@ class BaseDatasource(AuditMixinNullable, ImportMixin):
             'columns': [o.data for o in self.columns],
             'edit_url': self.url,
             'filterable_cols': utils.choicify(self.filterable_column_names),
+            'geofilterable_cols': utils.choicify(self.geofilterable_column_names),
             'gb_cols': utils.choicify(self.groupby_column_names),
             'metrics': [o.data for o in self.metrics],
             'metrics_combo': self.metrics_combo,
@@ -354,6 +359,7 @@ class BaseColumn(AuditMixinNullable, ImportMixin):
     max = Column(Boolean, default=False)
     min = Column(Boolean, default=False)
     filterable = Column(Boolean, default=False)
+    geofilterable = Column(Boolean, default=False)
     description = Column(Text)
     is_dttm = None
 
@@ -399,7 +405,7 @@ class BaseColumn(AuditMixinNullable, ImportMixin):
     def data(self):
         attrs = (
             'id', 'column_name', 'verbose_name', 'description', 'expression',
-            'filterable', 'groupby', 'is_dttm', 'type',
+            'filterable', 'groupby', 'geofilterable', 'is_dttm', 'type',
             'database_expression', 'python_date_format',
         )
         return {s: getattr(self, s) for s in attrs if hasattr(self, s)}

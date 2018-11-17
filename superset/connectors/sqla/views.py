@@ -36,7 +36,7 @@ class TableColumnInlineView(CompactCRUDMixin, SupersetModelView):  # noqa
     add_columns = edit_columns
     list_columns = [
         'column_name', 'verbose_name', 'type', 'groupby', 'filterable',
-        'is_dttm']
+        'geofilterable', 'is_dttm']
     page_size = 500
     description_columns = {
         'is_dttm': _(
@@ -46,6 +46,9 @@ class TableColumnInlineView(CompactCRUDMixin, SupersetModelView):  # noqa
         'filterable': _(
             'Whether this column is exposed in the `Filters` section '
             'of the explore view.'),
+        'geofilterable': _(
+            'Whether this column is exposed in the Geo-filters section.'
+        ),
         'type': _(
             'The data type that was inferred by the database. '
             'It may be necessary to input a type manually for '
@@ -78,6 +81,7 @@ class TableColumnInlineView(CompactCRUDMixin, SupersetModelView):  # noqa
         'verbose_name': _('Verbose Name'),
         'description': _('Description'),
         'groupby': _('Groupable'),
+        'geofilterable': _('Geofilterable'),
         'filterable': _('Filterable'),
         'table': _('Table'),
         'expression': _('Expression'),

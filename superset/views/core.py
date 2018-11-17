@@ -2273,6 +2273,7 @@ class Superset(BaseSupersetView):
             col = TableColumn(
                 column_name=column_name,
                 filterable=True,
+                geofilterable=True,
                 groupby=True,
                 is_dttm=config.get('is_date', False),
                 type=config.get('type', False),
