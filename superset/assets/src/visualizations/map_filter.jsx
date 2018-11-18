@@ -23,6 +23,7 @@ import {
 } from '../utils/common';
 import './mapbox.css';
 import sandboxedEval from '../modules/sandbox';
+import _ from 'lodash'
 
 const NOOP = () => {};
 
@@ -70,6 +71,8 @@ function getCategories(formData, queryData) {
   return categories;
 }
 
+
+
 /* addBgLayers
 * Adds background layers to the map from the given configuration
 */
@@ -90,6 +93,7 @@ function addBgLayers(map, conf, accessToken) {
        paint: { 'raster-opacity': conf[key].opacity },
        layout: { visibility: conf[key].visible ? 'visible' : 'none' },
      });
+
     } else if (conf[key].type === 'vector') {
       const paint = {
         line: {
@@ -109,6 +113,8 @@ function addBgLayers(map, conf, accessToken) {
       if (conf[key]['fill-type'] === 'symbol') {
         layout['icon-image'] = conf[key].icon;
       }
+
+
       map.addLayer({
         id: key,
         type: conf[key]['fill-type'],
@@ -122,6 +128,8 @@ function addBgLayers(map, conf, accessToken) {
     }
   }
 }
+
+// 
 
 
 /* MapGLDraw
@@ -185,9 +193,28 @@ class MapGLDraw extends MapGL {
     const addTooltips = this.addTooltips;
     const accessToken = this.props.mapboxApiAccessToken;
 
+    //we dont want satellite layer here on 'load'
     map.on('load', function () {
       // Displays the data distributions
       addBgLayers(map,  geoJSONBgLayers, accessToken);
+      //add satellite layer as a source?
+      map.addSource('satellite', {
+        type: 'raster',
+        url:'mapbox://mapbox.satellite'
+      })
+
+      //add satellite layer, note: visibility cannot be hardcoded here, so toggle not possible
+      map.addLayer({
+        id : 'satellite',
+        source : {type:'raster', url:'mapbox://mapbox.satellite'},
+        type : 'raster',
+        
+        // visibility : 'none'
+      });
+
+
+      //layers added in order -- this layer on top of satellite
+      //do we want this layer to be toggleable also?
       map.addLayer({
         id: 'points',
         type: 'circle',
@@ -201,6 +228,12 @@ class MapGLDraw extends MapGL {
           'circle-stroke-color': '#FFF',
         },
       });
+
+
+      var toggleableLayerIds = ['satellite'];
+
+
+
       // Displays the polygon drawing/selection controls
       this.draw = new MapboxDraw({
           displayControlsDefault: false,
@@ -310,7 +343,7 @@ class MapFilter extends React.Component {
       this.props.slice.formData,
       this.props.json.data.geoJSON.features,
     );
-
+      // console.log('this.colors', this.colors)
     this.bgLayers = getBgLayersLegend(this.props.json.data.geoJSONBgLayers);
     this.onViewportChange = this.onViewportChange.bind(this);
     this.toggleLayer = this.toggleLayer.bind(this);
@@ -366,7 +399,10 @@ class MapFilter extends React.Component {
     );
   }
 
+
+
   render() {
+    console.log('hotloaded3')
     return (
       <div style={{ position: 'relative' }} className="mapFilter" >
         <MapGLDraw
@@ -388,11 +424,13 @@ class MapFilter extends React.Component {
             position="br"
             categories={this.colors}
           />
+          {/* perhaps use react bootstrap checkbox here */}
+          <button onClick={() => {console.log('button clicked')}}>Satellite layer</button>
         </MapGLDraw>
         <LayerSelector
           position="br"
           toggleLayer={this.toggleLayer}
-          layers={this.bgLayers}
+          layers={this.bgLayers} // need to add satellite layer here, or 
           width={this.props.slice.width()}
           height={this.props.slice.height()}
         />
