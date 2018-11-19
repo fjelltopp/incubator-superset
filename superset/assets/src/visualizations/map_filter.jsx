@@ -189,6 +189,19 @@ class MapGLDraw extends MapGL {
     map.on('load', function () {
       // Displays the data distributions
       addBgLayers(map,  geoJSONBgLayers, accessToken);
+
+      //add satellite layer, note: visibility cannot be hardcoded here, so toggle not possible
+      map.addLayer({
+      id : 'satellite',
+      source : {type:'raster', url:'mapbox://mapbox.satellite'},
+      type : 'raster',
+      
+      // visibility : 'none'
+      });
+
+
+    //layers added in order -- this layer on top of satellite
+    //do we want this layer to be toggleable also?
       map.addLayer({
         id: 'points',
         type: 'circle',
