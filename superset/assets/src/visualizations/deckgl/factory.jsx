@@ -41,7 +41,6 @@ export function createDeckGLComponent(getLayer, getPoints) {
         layers={[layer]}
         mapStyle={formData.mapbox_style}
         setControlValue={setControlValue}
-        deckGeoJSONLayers={payload.data.deckGeoJSONLayers}
       />
     );
   }
@@ -77,6 +76,7 @@ export function createCategoricalDeckGLComponent(getLayer, getPoints) {
         payload={payload}
         onAddFilter={onAddFilter}
         setTooltip={setTooltip}
+        deckGeoJSONLayers={payload.data.deckGeoJSONLayers}
       />
     );
   }

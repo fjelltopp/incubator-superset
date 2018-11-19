@@ -654,7 +654,6 @@ class SqlaTable(Model, BaseDatasource):
             col_obj = cols.get(col)
             if col_obj:
                 is_list_target = op in ('in', 'not in')
-                logging.info(op)
                 if op in ["geo_within"]:
                     features = flt.get('val')["features"]
 
