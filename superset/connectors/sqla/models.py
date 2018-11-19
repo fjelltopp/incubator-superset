@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C,R,W
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 from datetime import datetime
 import logging
 
@@ -30,7 +24,6 @@ from superset.jinja_context import get_template_processor
 from superset.models.annotations import Annotation
 from superset.models.core import Database
 from superset.models.helpers import QueryResult
-from superset.models.helpers import set_perm
 from superset.utils import DTTM_ALIAS, QueryStatus
 
 from geoalchemy2.types import Geography, Geometry
@@ -104,13 +97,13 @@ class TableColumn(Model, BaseColumn):
         s for s in export_fields if s not in ('table_id',)]
     export_parent = 'table'
 
-    @property
-    def sqla_col(self):
-        name = self.column_name
+    def get_sqla_col(self, label=None):
+        db_engine_spec = self.table.database.db_engine_spec
+        label = db_engine_spec.make_label_compatible(label if label else self.column_name)
         if not self.expression:
-            col = column(self.column_name).label(name)
+            col = column(self.column_name).label(label)
         else:
-            col = literal_column(self.expression).label(name)
+            col = literal_column(self.expression).label(label)
         return col
 
     @property
@@ -118,7 +111,7 @@ class TableColumn(Model, BaseColumn):
         return self.table
 
     def get_time_filter(self, start_dttm, end_dttm):
-        col = self.sqla_col.label('__time')
+        col = self.get_sqla_col(label='__time')
         l = []  # noqa: E741
         if start_dttm:
             l.append(col >= text(self.dttm_sql_literal(start_dttm)))
@@ -236,10 +229,10 @@ class SqlMetric(Model, BaseMetric):
         s for s in export_fields if s not in ('table_id', )])
     export_parent = 'table'
 
-    @property
-    def sqla_col(self):
-        name = self.metric_name
-        return literal_column(self.expression).label(name)
+    def get_sqla_col(self, label=None):
+        db_engine_spec = self.table.database.db_engine_spec
+        label = db_engine_spec.make_label_compatible(label if label else self.metric_name)
+        return literal_column(self.expression).label(label)
 
     @property
     def perm(self):
@@ -292,7 +285,7 @@ class SqlaTable(Model, BaseDatasource):
     export_fields = (
         'table_name', 'main_dttm_col', 'description', 'default_endpoint',
         'database_id', 'offset', 'cache_timeout', 'schema',
-        'sql', 'params', 'template_params')
+        'sql', 'params', 'template_params', 'filter_select_enabled')
     update_from_object_fields = [
         f for f in export_fields if f not in ('table_name', 'database_id')]
     export_parent = 'database'
@@ -321,6 +314,10 @@ class SqlaTable(Model, BaseDatasource):
     @property
     def datasource_name(self):
         return self.table_name
+
+    @property
+    def database_name(self):
+        return self.database.name
 
     @property
     def link(self):
@@ -426,11 +423,10 @@ class SqlaTable(Model, BaseDatasource):
         cols = {col.column_name: col for col in self.columns}
         target_col = cols[column_name]
         tp = self.get_template_processor()
-        db_engine_spec = self.database.db_engine_spec
 
         qry = (
-            select([target_col.sqla_col])
-            .select_from(self.get_from_clause(tp, db_engine_spec))
+            select([target_col.get_sqla_col()])
+            .select_from(self.get_from_clause(tp))
             .distinct()
         )
         if limit:
@@ -479,7 +475,7 @@ class SqlaTable(Model, BaseDatasource):
             tbl.schema = self.schema
         return tbl
 
-    def get_from_clause(self, template_processor=None, db_engine_spec=None):
+    def get_from_clause(self, template_processor=None):
         # Supporting arbitrary SQL statements in place of tables
         if self.sql:
             from_sql = self.sql
@@ -489,7 +485,7 @@ class SqlaTable(Model, BaseDatasource):
             return TextAsFrom(sa.text(from_sql), []).alias('expr_qry')
         return self.get_sqla_table()
 
-    def adhoc_metric_to_sa(self, metric, cols):
+    def adhoc_metric_to_sqla(self, metric, cols):
         """
         Turn an adhoc metric into a sqlalchemy column.
 
@@ -498,22 +494,25 @@ class SqlaTable(Model, BaseDatasource):
         :returns: The metric defined as a sqlalchemy column
         :rtype: sqlalchemy.sql.column
         """
-        expressionType = metric.get('expressionType')
-        if expressionType == utils.ADHOC_METRIC_EXPRESSION_TYPES['SIMPLE']:
+        expression_type = metric.get('expressionType')
+        db_engine_spec = self.database.db_engine_spec
+        label = db_engine_spec.make_label_compatible(metric.get('label'))
+
+        if expression_type == utils.ADHOC_METRIC_EXPRESSION_TYPES['SIMPLE']:
             column_name = metric.get('column').get('column_name')
-            sa_column = column(column_name)
+            sqla_column = column(column_name)
             table_column = cols.get(column_name)
 
             if table_column:
-                sa_column = table_column.sqla_col
+                sqla_column = table_column.get_sqla_col()
 
-            sa_metric = self.sqla_aggregations[metric.get('aggregate')](sa_column)
-            sa_metric = sa_metric.label(metric.get('label'))
-            return sa_metric
-        elif expressionType == utils.ADHOC_METRIC_EXPRESSION_TYPES['SQL']:
-            sa_metric = literal_column(metric.get('sqlExpression'))
-            sa_metric = sa_metric.label(metric.get('label'))
-            return sa_metric
+            sqla_metric = self.sqla_aggregations[metric.get('aggregate')](sqla_column)
+            sqla_metric = sqla_metric.label(label)
+            return sqla_metric
+        elif expression_type == utils.ADHOC_METRIC_EXPRESSION_TYPES['SQL']:
+            sqla_metric = literal_column(metric.get('sqlExpression'))
+            sqla_metric = sqla_metric.label(label)
+            return sqla_metric
         else:
             return None
 
@@ -571,15 +570,16 @@ class SqlaTable(Model, BaseDatasource):
         metrics_exprs = []
         for m in metrics:
             if utils.is_adhoc_metric(m):
-                metrics_exprs.append(self.adhoc_metric_to_sa(m, cols))
+                metrics_exprs.append(self.adhoc_metric_to_sqla(m, cols))
             elif m in metrics_dict:
-                metrics_exprs.append(metrics_dict.get(m).sqla_col)
+                metrics_exprs.append(metrics_dict.get(m).get_sqla_col())
             else:
                 raise Exception(_("Metric '{}' is not valid".format(m)))
         if metrics_exprs:
             main_metric_expr = metrics_exprs[0]
         else:
-            main_metric_expr = literal_column('COUNT(*)').label('ccount')
+            main_metric_expr = literal_column('COUNT(*)').label(
+                db_engine_spec.make_label_compatible('count'))
 
         select_exprs = []
         groupby_exprs = []
@@ -590,8 +590,8 @@ class SqlaTable(Model, BaseDatasource):
             inner_groupby_exprs = []
             for s in groupby:
                 col = cols[s]
-                outer = col.sqla_col
-                inner = col.sqla_col.label(col.column_name + '__')
+                outer = col.get_sqla_col()
+                inner = col.get_sqla_col(col.column_name + '__')
 
                 groupby_exprs.append(outer)
                 select_exprs.append(outer)
@@ -599,7 +599,7 @@ class SqlaTable(Model, BaseDatasource):
                 inner_select_exprs.append(inner)
         elif columns:
             for s in columns:
-                select_exprs.append(cols[s].sqla_col)
+                select_exprs.append(cols[s].get_sqla_col())
             metrics_exprs = []
 
         if granularity:
@@ -623,14 +623,13 @@ class SqlaTable(Model, BaseDatasource):
         select_exprs += metrics_exprs
         qry = sa.select(select_exprs)
 
-        tbl = self.get_from_clause(template_processor, db_engine_spec)
+        tbl = self.get_from_clause(template_processor)
 
         if not columns:
             qry = qry.group_by(*groupby_exprs)
 
         where_clause_and = []
         having_clause_and = []
-
         for flt in filter:
             if not all([flt.get(s) for s in ['col', 'op']]):
                 continue
@@ -653,20 +652,18 @@ class SqlaTable(Model, BaseDatasource):
                 col = "geo"
                 op = "geo_within"
             col_obj = cols.get(col)
-            
             if col_obj:
                 is_list_target = op in ('in', 'not in')
-                logging.info(op)
                 if op in ["geo_within"]:
                     features = flt.get('val')["features"]
-                    
+
                     shapes = [geometry.shape(feature["geometry"]) for feature in features]
                     total_shape = ops.cascaded_union(shapes)
                     eq = total_shape
                     where_clause_and.append(
                         sa.func.ST_COVERS(
                             sa.func.ST_GeogFromText(eq.wkt),
-                            sa.cast(cols.get("geo").sqla_col, Geometry)
+                            sa.cast(cols.get("geo").get_sqla_col(), Geometry)
                         )
                     )
                 else:
@@ -675,9 +672,9 @@ class SqlaTable(Model, BaseDatasource):
                         target_column_is_numeric=col_obj.is_num,
                         is_list_target=is_list_target)
                     if op in ('in', 'not in'):
-                        cond = col_obj.sqla_col.in_(eq)
+                        cond = col_obj.get_sqla_col().in_(eq)
                         if '<NULL>' in eq:
-                            cond = or_(cond, col_obj.sqla_col == None)  # noqa
+                            cond = or_(cond, col_obj.get_sqla_col() == None)  # noqa
                         if op == 'not in':
                             cond = ~cond
                         where_clause_and.append(cond)
@@ -685,23 +682,23 @@ class SqlaTable(Model, BaseDatasource):
                         if col_obj.is_num:
                             eq = utils.string_to_num(flt['val'])
                         if op == '==':
-                            where_clause_and.append(col_obj.sqla_col == eq)
+                            where_clause_and.append(col_obj.get_sqla_col() == eq)
                         elif op == '!=':
-                            where_clause_and.append(col_obj.sqla_col != eq)
+                            where_clause_and.append(col_obj.get_sqla_col() != eq)
                         elif op == '>':
-                            where_clause_and.append(col_obj.sqla_col > eq)
+                            where_clause_and.append(col_obj.get_sqla_col() > eq)
                         elif op == '<':
-                            where_clause_and.append(col_obj.sqla_col < eq)
+                            where_clause_and.append(col_obj.get_sqla_col() < eq)
                         elif op == '>=':
-                            where_clause_and.append(col_obj.sqla_col >= eq)
+                            where_clause_and.append(col_obj.get_sqla_col() >= eq)
                         elif op == '<=':
-                            where_clause_and.append(col_obj.sqla_col <= eq)
+                            where_clause_and.append(col_obj.get_sqla_col() <= eq)
                         elif op == 'LIKE':
-                            where_clause_and.append(col_obj.sqla_col.like(eq))
+                            where_clause_and.append(col_obj.get_sqla_col().like(eq))
                         elif op == 'IS NULL':
-                            where_clause_and.append(col_obj.sqla_col == None)  # noqa
+                            where_clause_and.append(col_obj.get_sqla_col() == None)  # noqa
                         elif op == 'IS NOT NULL':
-                            where_clause_and.append(col_obj.sqla_col != None)  # noqa
+                            where_clause_and.append(col_obj.get_sqla_col() != None)  # noqa
         if extras:
             where = extras.get('where')
             if where:
@@ -723,7 +720,7 @@ class SqlaTable(Model, BaseDatasource):
         for col, ascending in orderby:
             direction = asc if ascending else desc
             if utils.is_adhoc_metric(col):
-                col = self.adhoc_metric_to_sa(col, cols)
+                col = self.adhoc_metric_to_sqla(col, cols)
             qry = qry.order_by(direction(col))
 
         if row_limit:
@@ -749,12 +746,12 @@ class SqlaTable(Model, BaseDatasource):
                 ob = inner_main_metric_expr
                 if timeseries_limit_metric:
                     if utils.is_adhoc_metric(timeseries_limit_metric):
-                        ob = self.adhoc_metric_to_sa(timeseries_limit_metric, cols)
+                        ob = self.adhoc_metric_to_sqla(timeseries_limit_metric, cols)
                     elif timeseries_limit_metric in metrics_dict:
                         timeseries_limit_metric = metrics_dict.get(
                             timeseries_limit_metric,
                         )
-                        ob = timeseries_limit_metric.sqla_col
+                        ob = timeseries_limit_metric.get_sqla_col()
                     else:
                         raise Exception(_("Metric '{}' is not valid".format(m)))
                 direction = desc if order_desc else asc
@@ -786,7 +783,11 @@ class SqlaTable(Model, BaseDatasource):
                     'order_desc': True,
                 }
                 result = self.query(subquery_obj)
-                dimensions = [c for c in result.df.columns if c not in metrics]
+                cols = {col.column_name: col for col in self.columns}
+                dimensions = [
+                    c for c in result.df.columns
+                    if c not in metrics and c in cols
+                ]
                 top_groups = self._get_top_groups(result.df, dimensions)
                 qry = qry.where(top_groups)
 
@@ -799,7 +800,7 @@ class SqlaTable(Model, BaseDatasource):
             group = []
             for dimension in dimensions:
                 col_obj = cols.get(dimension)
-                group.append(col_obj.sqla_col == row[dimension])
+                group.append(col_obj.get_sqla_col() == row[dimension])
             groups.append(and_(*group))
 
         return or_(*groups)
@@ -838,7 +839,8 @@ class SqlaTable(Model, BaseDatasource):
         """Fetches the metadata for the table and merges it in"""
         try:
             table = self.get_sqla_table_object()
-        except Exception:
+        except Exception as e:
+            logging.exception(e)
             raise Exception(_(
                 "Table [{}] doesn't seem to exist in the specified database, "
                 "couldn't fetch column information").format(self.table_name))
@@ -853,6 +855,7 @@ class SqlaTable(Model, BaseDatasource):
             .filter(or_(TableColumn.column_name == col.name
                         for col in table.columns)))
         dbcols = {dbcol.column_name: dbcol for dbcol in dbcols}
+        db_engine_spec = self.database.db_engine_spec
 
         for col in table.columns:
             try:
@@ -885,6 +888,9 @@ class SqlaTable(Model, BaseDatasource):
         ))
         if not self.main_dttm_col:
             self.main_dttm_col = any_date_col
+        for metric in metrics:
+            metric.metric_name = db_engine_spec.mutate_expression_label(
+                metric.metric_name)
         self.add_missing_metrics(metrics)
         db.session.merge(self)
         db.session.commit()
@@ -928,5 +934,5 @@ class SqlaTable(Model, BaseDatasource):
         return qry.filter_by(is_sqllab_view=False)
 
 
-sa.event.listen(SqlaTable, 'after_insert', set_perm)
-sa.event.listen(SqlaTable, 'after_update', set_perm)
+sa.event.listen(SqlaTable, 'after_insert', security_manager.set_perm)
+sa.event.listen(SqlaTable, 'after_update', security_manager.set_perm)

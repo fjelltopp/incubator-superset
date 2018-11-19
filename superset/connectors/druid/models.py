@@ -1,11 +1,5 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C,R,W
 # pylint: disable=invalid-unary-operand-type
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 from copy import deepcopy
 from datetime import datetime, timedelta
@@ -30,7 +24,6 @@ from pydruid.utils.postaggregator import (
     Const, Field, HyperUniqueCardinality, Postaggregator, Quantile, Quantiles,
 )
 import requests
-from six import string_types
 import sqlalchemy as sa
 from sqlalchemy import (
     Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint,
@@ -41,7 +34,7 @@ from superset import conf, db, import_util, security_manager, utils
 from superset.connectors.base.models import BaseColumn, BaseDatasource, BaseMetric
 from superset.exceptions import MetricPermException, SupersetException
 from superset.models.helpers import (
-    AuditMixinNullable, ImportMixin, QueryResult, set_perm,
+    AuditMixinNullable, ImportMixin, QueryResult,
 )
 from superset.utils import (
     DimSelector, DTTM_ALIAS, flasher,
@@ -187,11 +180,11 @@ class DruidCluster(Model, AuditMixinNullable, ImportMixin):
                 with session.no_autoflush:
                     session.add(datasource)
                 flasher(
-                    'Adding new datasource [{}]'.format(ds_name), 'success')
+                    _('Adding new datasource [{}]').format(ds_name), 'success')
                 ds_map[ds_name] = datasource
             elif refreshAll:
                 flasher(
-                    'Refreshing datasource [{}]'.format(ds_name), 'info')
+                    _('Refreshing datasource [{}]').format(ds_name), 'info')
             else:
                 del ds_map[ds_name]
                 continue
@@ -488,6 +481,7 @@ class DruidDatasource(Model, BaseDatasource):
     export_fields = (
         'datasource_name', 'is_hidden', 'description', 'default_endpoint',
         'cluster_name', 'offset', 'cache_timeout', 'params',
+        'filter_select_enabled',
     )
     update_from_object_fields = export_fields
 
@@ -774,7 +768,7 @@ class DruidDatasource(Model, BaseDatasource):
             if period_name in ('week_ending_saturday', 'week_starting_sunday'):
                 # use Sunday as start of the week
                 granularity['origin'] = '2016-01-03T00:00:00'
-        elif not isinstance(period_name, string_types):
+        elif not isinstance(period_name, str):
             granularity['type'] = 'duration'
             granularity['duration'] = period_name
         elif period_name.startswith('P'):
@@ -1601,5 +1595,5 @@ class DruidDatasource(Model, BaseDatasource):
         ]
 
 
-sa.event.listen(DruidDatasource, 'after_insert', set_perm)
-sa.event.listen(DruidDatasource, 'after_update', set_perm)
+sa.event.listen(DruidDatasource, 'after_insert', security_manager.set_perm)
+sa.event.listen(DruidDatasource, 'after_update', security_manager.set_perm)

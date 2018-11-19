@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C,R,W
 """ Superset wrapper around pandas.DataFrame.
 
@@ -7,11 +6,6 @@ TODO(bkyryliuk): add support for the conventions like: *_dim or dim_*
 TODO(bkyryliuk): recognize integer encoded enums.
 
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 from datetime import date, datetime
 import logging
 
@@ -73,9 +67,7 @@ class SupersetDataFrame(object):
         if cursor_description:
             column_names = [col[0] for col in cursor_description]
 
-        case_sensitive = db_engine_spec.consistent_case_sensitivity
-        self.column_names = dedup(column_names,
-                                  case_sensitive=case_sensitive)
+        self.column_names = dedup(column_names)
 
         data = data or []
         self.df = (

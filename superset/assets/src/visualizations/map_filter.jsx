@@ -1,5 +1,6 @@
 import dompurify from 'dompurify';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxDraw from '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw';
 import d3 from 'd3';
 import React from 'react';
@@ -10,8 +11,8 @@ import WebMercatorViewport from 'viewport-mercator-project';
 
 import Legend from './Legend';
 import LayerSelector from './LayerSelector';
+import { getColor } from '../modules/CategoricalColorNamespace';
 import {
-  getColorFromScheme,
   hexToRGB,
   rgbaToHex,
 } from '../modules/colors';
@@ -53,10 +54,7 @@ function getCategories(formData, queryData) {
       let color;
       if (!categories.hasOwnProperty(featureProps.cat_color)) {
         if (formData.dimension) {
-          color = getColorFromScheme(
-            featureProps.cat_color,
-            formData.color_scheme,
-          );
+          color = getColor(featureProps.cat_color, formData.color_scheme);
         } else {
           color = fixedColorHex;
         }
@@ -406,7 +404,7 @@ class MapFilter extends React.Component {
 MapFilter.propTypes = {
   json: PropTypes.object,
   slice: PropTypes.object,
-  setControlValue: PropTypes.function,
+  setControlValue: PropTypes.func,
 };
 
 

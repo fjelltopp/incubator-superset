@@ -1,11 +1,5 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C,R,W
 """Utility functions used across Superset"""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 from builtins import object
 from datetime import date, datetime, time, timedelta
 import decimal
@@ -420,7 +414,7 @@ def markdown(s, markup_wrap=False):
                           'li', 'dd', 'dt', 'img', 'a']
     safe_markdown_attrs = {'img': ['src', 'alt', 'title'],
                            'a': ['href', 'alt', 'title']}
-    s = md.markdown(s or '', [
+    s = md.markdown(s or '', extensions=[
         'markdown.extensions.tables',
         'markdown.extensions.fenced_code',
         'markdown.extensions.codehilite',
@@ -710,7 +704,9 @@ def get_celery_app(config):
     global _celery_app
     if _celery_app:
         return _celery_app
-    _celery_app = celery.Celery(config_source=config.get('CELERY_CONFIG'))
+    _celery_app = celery.Celery()
+    _celery_app.config_from_object(config.get('CELERY_CONFIG'))
+    _celery_app.set_default()
     return _celery_app
 
 
@@ -723,13 +719,13 @@ def to_adhoc(filt, expressionType='SIMPLE', clause='where'):
 
     if expressionType == 'SIMPLE':
         result.update({
-            'comparator': filt['val'],
-            'operator': filt['op'],
-            'subject': filt['col'],
+            'comparator': filt.get('val'),
+            'operator': filt.get('op'),
+            'subject': filt.get('col'),
         })
     elif expressionType == 'SQL':
         result.update({
-            'sqlExpression': filt[clause],
+            'sqlExpression': filt.get(clause),
         })
 
     return result
@@ -834,18 +830,25 @@ def get_or_create_main_db():
     from superset.models import core as models
 
     logging.info('Creating database reference')
-    dbobj = (
-        db.session.query(models.Database)
-        .filter_by(database_name='main')
-        .first())
+    dbobj = get_main_database(db.session)
     if not dbobj:
         dbobj = models.Database(database_name='main')
     dbobj.set_sqlalchemy_uri(conf.get('SQLALCHEMY_DATABASE_URI'))
     dbobj.expose_in_sqllab = True
     dbobj.allow_run_sync = True
+    dbobj.allow_csv_upload = True
     db.session.add(dbobj)
     db.session.commit()
     return dbobj
+
+
+def get_main_database(session):
+    from superset.models import core as models
+    return (
+        session.query(models.Database)
+        .filter_by(database_name='main')
+        .first()
+    )
 
 
 def is_adhoc_metric(metric):
@@ -1016,3 +1019,7 @@ def get_username():
 
 def MediumText():
     return Text().with_variant(MEDIUMTEXT(), 'mysql')
+
+
+def shortid():
+    return '{}'.format(uuid.uuid4())[-12:]

@@ -1,10 +1,5 @@
 """Loads datasets, dashboards and slices in a new superset instance"""
 # pylint: disable=C,R,W
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import datetime
 import gzip
 import json
@@ -955,6 +950,14 @@ def load_birth_names():
                     'aggregate': 'SUM',
                     'label': 'SUM(num_california)',
                 })),
+        Slice(
+            slice_name="Num Births Trend",
+            viz_type='line',
+            datasource_type='table',
+            datasource_id=tbl.id,
+            params=get_slice_json(
+                defaults,
+                viz_type="line")),
     ]
     for slc in slices:
         merge_slice(slc)

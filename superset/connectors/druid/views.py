@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C,R,W
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 from datetime import datetime
 import json
 import logging
@@ -341,8 +335,8 @@ class Druid(BaseSupersetView):
                 return redirect('/druidclustermodelview/list/')
             cluster.metadata_last_refreshed = datetime.now()
             flash(
-                'Refreshed metadata from cluster '
-                '[' + cluster.cluster_name + ']',
+                _('Refreshed metadata from cluster [{}]').format(
+                    cluster.cluster_name),
                 'info')
         session.commit()
         return redirect('/druiddatasourcemodelview/list/')
