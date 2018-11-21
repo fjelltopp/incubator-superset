@@ -2707,7 +2707,7 @@ class MapFilterViz(BaseDeckGLViz):
                 {
                     'type': 'Feature',
                     'properties': {
-                        **x['extraProps'],
+                        **x.get('extraProps', {}),
                         'cat_color': x['cat_color']
 
                     },
