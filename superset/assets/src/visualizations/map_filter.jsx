@@ -24,7 +24,7 @@ import {
 import './mapbox.css';
 import sandboxedEval from '../modules/sandbox';
 import _ from 'lodash'
-// import './map_filter.css'
+import './map_filter.css'
 
 const NOOP = () => {};
 
@@ -194,17 +194,15 @@ class MapGLDraw extends MapGL {
     const addTooltips = this.addTooltips;
     const accessToken = this.props.mapboxApiAccessToken;
 
-    //we dont want satellite layer here on 'load'
     map.on('load', function () {
       // Displays the data distributions
       addBgLayers(map,  geoJSONBgLayers, accessToken);
-      //add satellite layer as a source?
+
       map.addSource('satellite', {
         type: 'raster',
         url:'mapbox://mapbox.satellite'
       })
 
-      //add satellite layer, note: visibility cannot be hardcoded here, so toggle not possible
       map.addLayer({
         'id' : 'satellite',
         'type' : 'raster',
@@ -214,9 +212,6 @@ class MapGLDraw extends MapGL {
         }
       });
 
-
-      //layers added in order -- this layer on top of satellite
-      //do we want this layer to be toggleable also?
       map.addLayer({
         id: 'points',
         type: 'circle',
@@ -237,10 +232,10 @@ class MapGLDraw extends MapGL {
           var id = toggleableLayerIds[i];
 
           var link = document.createElement('a');
-          console.log("link", link)
           link.href = '#';
-          link.className = 'active';
+          link.className = 'satellite-button-active';
           link.textContent = id;
+          console.log("link", link)
 
           link.onclick = function (e) {
               var clickedLayer = this.textContent;
@@ -251,9 +246,9 @@ class MapGLDraw extends MapGL {
 
               if (visibility === 'visible') {
                   map.setLayoutProperty(clickedLayer, 'visibility', 'none');
-                  this.className = '';
+                  this.className = 'satellite-button';
               } else {
-                  this.className = 'active';
+                  this.className = 'satellite-button-active';
                   map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
               }
           };
@@ -443,7 +438,7 @@ class MapFilter extends React.Component {
   // }
 
   render() {
-    console.log('hotloaded6')
+   
     return (
       <div style={{ position: 'relative' }} className="mapFilter" >
         <MapGLDraw
