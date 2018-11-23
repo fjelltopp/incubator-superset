@@ -407,9 +407,7 @@ class MapFilter extends React.Component {
 
   // Toggles the visibiliity of a layer
   toggleLayer(layer, visibility) {
-    const map = this.getMap();
-    map.setLayoutProperty(layer, 'visibility',
-                            visibility ? 'visible' : 'none');
+    this.child.toggleLayer(layer, visibility);
   }
 
   updatePopup(popup) {
