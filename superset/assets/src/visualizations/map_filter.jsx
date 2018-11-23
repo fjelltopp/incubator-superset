@@ -374,7 +374,7 @@ class MapFilter extends React.Component {
       // console.log('this.colors', this.colors)
     this.bgLayers = getBgLayersLegend(this.props.json.data.geoJSONBgLayers);
     this.onViewportChange = this.onViewportChange.bind(this);
-   
+    this.toggleLayer = this.toggleLayer.bind(this)
     this.tick = this.tick.bind(this);
     this.updatePopup = this.updatePopup.bind(this);
     // this.toggleSatellite = this.toggleSatellite.bind(this);
@@ -405,6 +405,12 @@ class MapFilter extends React.Component {
     }
   }
 
+  // Toggles the visibiliity of a layer
+  toggleLayer(layer, visibility) {
+    const map = this.getMap();
+    map.setLayoutProperty(layer, 'visibility',
+                            visibility ? 'visible' : 'none');
+  }
 
   updatePopup(popup) {
     this.state.popup = popup;
