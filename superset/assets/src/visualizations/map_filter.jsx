@@ -198,6 +198,7 @@ class MapGLDraw extends MapGL {
       // Displays the data distributions
       addBgLayers(map,  geoJSONBgLayers, accessToken);
 
+      //Adds satellite layer
       map.addSource('satellite', {
         type: 'raster',
         url:'mapbox://mapbox.satellite'
@@ -226,6 +227,8 @@ class MapGLDraw extends MapGL {
         },
       });
 
+      // Creates a toggle for the satellite layer, and any other layers
+      // that we may want to be toggled in future.
       var toggleableLayerIds = [ 'satellite' ];
 
       for (var i = 0; i < toggleableLayerIds.length; i++) {
@@ -235,7 +238,6 @@ class MapGLDraw extends MapGL {
           link.href = '#';
           link.className = 'satellite-button-active';
           link.textContent = id;
-          console.log("link", link)
 
           link.onclick = function (e) {
               var clickedLayer = this.textContent;
@@ -253,15 +255,12 @@ class MapGLDraw extends MapGL {
               }
           };
 
+          var canvas = document.getElementById('mapFilter')
           var layers = document.getElementById('slice-container-2');
-          console.log('layers', layers)
           layers.appendChild(link);
         }
 
-      
-
-
-
+    
       // Displays the polygon drawing/selection controls
       this.draw = new MapboxDraw({
           displayControlsDefault: false,
@@ -342,7 +341,6 @@ function getBgLayersLegend(layers) {
           icon: layers[key].icon,
         };
     }
-    console.log(legends);
     return legends;
     }
 
@@ -430,21 +428,10 @@ class MapFilter extends React.Component {
     );
   }
 
-  // toggleSatellite () {
-  //   console.log("button clicked")
-  //   var visibility = map.getLayoutProperty(satellite, 'visibility');
-
-  //   if (visibility === 'visible') {
-  //     map.setLayoutProperty(satellite, 'visibility', 'none');
-  //   } else {
-  //     map.setLayoutProperty(satellite, 'visibility', 'visible')
-  //   }
-  // }
-
   render() {
    
     return (
-      <div style={{ position: 'relative' }} className="mapFilter" >
+      <div style={{ position: 'relative' }} className="mapFilter" id="mapFilter">
         <MapGLDraw
           {...this.state.viewport}
           mapStyle={this.props.slice.formData.mapbox_style}
