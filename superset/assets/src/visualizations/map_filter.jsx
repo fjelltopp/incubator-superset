@@ -371,7 +371,7 @@ class MapFilter extends React.Component {
       this.props.slice.formData,
       this.props.json.data.geoJSON.features,
     );
-      // console.log('this.colors', this.colors)
+      
     this.bgLayers = getBgLayersLegend(this.props.json.data.geoJSONBgLayers);
     this.onViewportChange = this.onViewportChange.bind(this);
     this.toggleLayer = this.toggleLayer.bind(this)
@@ -464,13 +464,11 @@ class MapFilter extends React.Component {
             position="br"
             categories={this.colors}
           />
-          {/* perhaps use react bootstrap checkbox here */}
-          {/* <button onClick={this.toggleSatellite()}>Satellite layer</button> */}
         </MapGLDraw>
         <LayerSelector
           position="br"
           toggleLayer={this.toggleLayer}
-          layers={this.bgLayers} // need to add satellite layer here, or 
+          layers={this.bgLayers} 
           width={this.props.slice.width()}
           height={this.props.slice.height()}
         />
