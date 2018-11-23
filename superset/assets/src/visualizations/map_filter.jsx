@@ -24,6 +24,7 @@ import {
 import './mapbox.css';
 import sandboxedEval from '../modules/sandbox';
 import _ from 'lodash'
+// import './map_filter.css'
 
 const NOOP = () => {};
 
@@ -205,11 +206,12 @@ class MapGLDraw extends MapGL {
 
       //add satellite layer, note: visibility cannot be hardcoded here, so toggle not possible
       map.addLayer({
-        id : 'satellite',
-        source : {type:'raster', url:'mapbox://mapbox.satellite'},
-        type : 'raster',
-        
-        // visibility : 'none'
+        'id' : 'satellite',
+        'type' : 'raster',
+        'source' : 'satellite',
+        'layout' : {
+          'visibility' : 'visible'
+        }
       });
 
 
@@ -229,8 +231,39 @@ class MapGLDraw extends MapGL {
         },
       });
 
+      var toggleableLayerIds = [ 'satellite' ];
 
-      var toggleableLayerIds = ['satellite'];
+      for (var i = 0; i < toggleableLayerIds.length; i++) {
+          var id = toggleableLayerIds[i];
+
+          var link = document.createElement('a');
+          console.log("link", link)
+          link.href = '#';
+          link.className = 'active';
+          link.textContent = id;
+
+          link.onclick = function (e) {
+              var clickedLayer = this.textContent;
+              e.preventDefault();
+              e.stopPropagation();
+
+              var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
+
+              if (visibility === 'visible') {
+                  map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+                  this.className = '';
+              } else {
+                  this.className = 'active';
+                  map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+              }
+          };
+
+          var layers = document.getElementById('slice-container-2');
+          console.log('layers', layers)
+          layers.appendChild(link);
+        }
+
+      
 
 
 
@@ -346,9 +379,10 @@ class MapFilter extends React.Component {
       // console.log('this.colors', this.colors)
     this.bgLayers = getBgLayersLegend(this.props.json.data.geoJSONBgLayers);
     this.onViewportChange = this.onViewportChange.bind(this);
-    this.toggleLayer = this.toggleLayer.bind(this);
+   
     this.tick = this.tick.bind(this);
     this.updatePopup = this.updatePopup.bind(this);
+    // this.toggleSatellite = this.toggleSatellite.bind(this);
   }
 
   componentWillMount() {
@@ -375,9 +409,7 @@ class MapFilter extends React.Component {
       this.setState(() => ({ previousViewport: this.state.viewport }));
     }
   }
-  toggleLayer(layer, visibility) {
-    this.child.toggleLayer(layer, visibility);
-  }
+
 
   updatePopup(popup) {
     this.state.popup = popup;
@@ -399,10 +431,19 @@ class MapFilter extends React.Component {
     );
   }
 
+  // toggleSatellite () {
+  //   console.log("button clicked")
+  //   var visibility = map.getLayoutProperty(satellite, 'visibility');
 
+  //   if (visibility === 'visible') {
+  //     map.setLayoutProperty(satellite, 'visibility', 'none');
+  //   } else {
+  //     map.setLayoutProperty(satellite, 'visibility', 'visible')
+  //   }
+  // }
 
   render() {
-    console.log('hotloaded3')
+    console.log('hotloaded6')
     return (
       <div style={{ position: 'relative' }} className="mapFilter" >
         <MapGLDraw
@@ -425,7 +466,7 @@ class MapFilter extends React.Component {
             categories={this.colors}
           />
           {/* perhaps use react bootstrap checkbox here */}
-          <button onClick={() => {console.log('button clicked')}}>Satellite layer</button>
+          {/* <button onClick={this.toggleSatellite()}>Satellite layer</button> */}
         </MapGLDraw>
         <LayerSelector
           position="br"
