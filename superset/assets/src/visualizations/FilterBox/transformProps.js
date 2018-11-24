@@ -15,6 +15,7 @@ export default function transformProps(basicChartInput) {
     showDruidTimeOrigin,
     showSqlaTimeColumn,
     showSqlaTimeGranularity,
+    showGeofilterable,
   } = formData;
   const { verboseMap } = datasource;
 
@@ -35,5 +36,6 @@ export default function transformProps(basicChartInput) {
     showDruidTimeOrigin,
     showSqlaTimeColumn,
     showSqlaTimeGrain: showSqlaTimeGranularity,
+    showGeofilterable,
   };
 }
