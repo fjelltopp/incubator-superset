@@ -2380,7 +2380,7 @@ msgid "Show Druid Time Origin"
 msgstr ""
 
 #: superset/assets/src/explore/controls.jsx:1411
-msgid "Show Geofilterable"
+msgid "Is Geofilterable"
 msgstr ""
 
 #: superset/assets/src/explore/controls.jsx:1413

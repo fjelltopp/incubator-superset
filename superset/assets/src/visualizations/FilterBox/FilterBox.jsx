@@ -44,7 +44,7 @@ const propTypes = {
   showSqlaTimeColumn: PropTypes.bool,
   showDruidTimeGrain: PropTypes.bool,
   showDruidTimeOrigin: PropTypes.bool,
-  showGeofilterable: PropTypes.bool,
+  geofilterable: PropTypes.bool,
 };
 const defaultProps = {
   origSelectedValues: {},
@@ -55,7 +55,7 @@ const defaultProps = {
   showDruidTimeGrain: false,
   showDruidTimeOrigin: false,
   instantFiltering: true,
-  showGeofilterable: false,
+  geofilterable: false,
 };
 
 class FilterBox extends React.Component {

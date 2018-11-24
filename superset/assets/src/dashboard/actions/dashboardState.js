@@ -28,7 +28,7 @@ export function setUnsavedChanges(hasUnsavedChanges) {
 
 export const CHANGE_FILTER = 'CHANGE_FILTER';
 export function changeFilter(chart, col, vals, merge = true, refresh = true) {
-  const op = chart.formData.show_geofilterable === true ? 'geo_within' : 'in';
+  const op = chart.formData.geofilterable === true ? 'geo_within' : 'in';
   console.log(`operation is: ${op}`);
 
   Logger.append(LOG_ACTIONS_CHANGE_DASHBOARD_FILTER, {
