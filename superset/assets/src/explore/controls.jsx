@@ -1445,6 +1445,13 @@ export const controls = {
     description: t('Check to include Time Origin dropdown'),
   },
 
+  show_geofilterable: {
+    type: 'CheckboxControl',
+    label: t('Show Geofilterable'),
+    default: false,
+    description: t('Check to make filters in this herams filter geofilterable'),
+  } ,
+
   show_datatable: {
     type: 'CheckboxControl',
     label: t('Data Table'),
