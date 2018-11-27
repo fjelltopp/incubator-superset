@@ -634,8 +634,9 @@ class SqlaTable(Model, BaseDatasource):
             if not all([flt.get(s) for s in ['col', 'op']]):
                 continue
             col = flt['col']
+            col_obj = cols.get(col)
             op = flt['op']
-            if op == "in" and col in app.config.get("active_geo_filters", []):
+            if op == "geo_within":
                 def geo_features_gen(values):
                     for value in values:
                         val_geo_ = app.config.get("active_geo_filters")[col][value]
@@ -650,55 +651,52 @@ class SqlaTable(Model, BaseDatasource):
                 flt["val"] = new_flt_geo_values
                 flt["col"] = "geo"
                 col = "geo"
-                op = "geo_within"
-            col_obj = cols.get(col)
+                col_obj = cols.get(col)
+                features = flt.get('val')["features"]
+
+                shapes = [geometry.shape(feature["geometry"]) for feature in features]
+                total_shape = ops.cascaded_union(shapes)
+                eq = total_shape
+                where_clause_and.append(
+                    sa.func.ST_COVERS(
+                        sa.func.ST_GeogFromText(eq.wkt),
+                        sa.cast(cols.get("geo").get_sqla_col(), Geometry)
+                    )
+                )
             if col_obj:
                 is_list_target = op in ('in', 'not in')
-                if op in ["geo_within"]:
-                    features = flt.get('val')["features"]
-
-                    shapes = [geometry.shape(feature["geometry"]) for feature in features]
-                    total_shape = ops.cascaded_union(shapes)
-                    eq = total_shape
-                    where_clause_and.append(
-                        sa.func.ST_COVERS(
-                            sa.func.ST_GeogFromText(eq.wkt),
-                            sa.cast(cols.get("geo").get_sqla_col(), Geometry)
-                        )
-                    )
+                eq = self.filter_values_handler(
+                    flt.get('val'),
+                    target_column_is_numeric=col_obj.is_num,
+                    is_list_target=is_list_target)
+                if op in ('in', 'not in'):
+                    cond = col_obj.get_sqla_col().in_(eq)
+                    if '<NULL>' in eq:
+                        cond = or_(cond, col_obj.get_sqla_col() == None)  # noqa
+                    if op == 'not in':
+                        cond = ~cond
+                    where_clause_and.append(cond)
                 else:
-                    eq = self.filter_values_handler(
-                        flt.get('val'),
-                        target_column_is_numeric=col_obj.is_num,
-                        is_list_target=is_list_target)
-                    if op in ('in', 'not in'):
-                        cond = col_obj.get_sqla_col().in_(eq)
-                        if '<NULL>' in eq:
-                            cond = or_(cond, col_obj.get_sqla_col() == None)  # noqa
-                        if op == 'not in':
-                            cond = ~cond
-                        where_clause_and.append(cond)
-                    else:
-                        if col_obj.is_num:
-                            eq = utils.string_to_num(flt['val'])
-                        if op == '==':
-                            where_clause_and.append(col_obj.get_sqla_col() == eq)
-                        elif op == '!=':
-                            where_clause_and.append(col_obj.get_sqla_col() != eq)
-                        elif op == '>':
-                            where_clause_and.append(col_obj.get_sqla_col() > eq)
-                        elif op == '<':
-                            where_clause_and.append(col_obj.get_sqla_col() < eq)
-                        elif op == '>=':
-                            where_clause_and.append(col_obj.get_sqla_col() >= eq)
-                        elif op == '<=':
-                            where_clause_and.append(col_obj.get_sqla_col() <= eq)
-                        elif op == 'LIKE':
-                            where_clause_and.append(col_obj.get_sqla_col().like(eq))
-                        elif op == 'IS NULL':
-                            where_clause_and.append(col_obj.get_sqla_col() == None)  # noqa
-                        elif op == 'IS NOT NULL':
-                            where_clause_and.append(col_obj.get_sqla_col() != None)  # noqa
+                    if col_obj.is_num:
+                        eq = utils.string_to_num(flt['val'])
+                    if op == '==':
+                        where_clause_and.append(col_obj.get_sqla_col() == eq)
+                    elif op == '!=':
+                        where_clause_and.append(col_obj.get_sqla_col() != eq)
+                    elif op == '>':
+                        where_clause_and.append(col_obj.get_sqla_col() > eq)
+                    elif op == '<':
+                        where_clause_and.append(col_obj.get_sqla_col() < eq)
+                    elif op == '>=':
+                        where_clause_and.append(col_obj.get_sqla_col() >= eq)
+                    elif op == '<=':
+                        where_clause_and.append(col_obj.get_sqla_col() <= eq)
+                    elif op == 'LIKE':
+                        where_clause_and.append(col_obj.get_sqla_col().like(eq))
+                    elif op == 'IS NULL':
+                        where_clause_and.append(col_obj.get_sqla_col() == None)  # noqa
+                    elif op == 'IS NOT NULL':
+                        where_clause_and.append(col_obj.get_sqla_col() != None)  # noqa
         if extras:
             where = extras.get('where')
             if where:
