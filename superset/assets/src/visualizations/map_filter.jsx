@@ -11,6 +11,7 @@ import WebMercatorViewport from 'viewport-mercator-project';
 
 import Legend from './Legend';
 import LayerSelector from './LayerSelector';
+import SatelliteToggle from './SatelliteToggle'
 import { getColor } from '../modules/CategoricalColorNamespace';
 import {
   hexToRGB,
@@ -451,6 +452,7 @@ class MapFilter extends React.Component {
             position="br"
             categories={this.colors}
           />
+          <SatelliteToggle />
         </MapGLDraw>
         <LayerSelector
           position="br"
@@ -459,6 +461,7 @@ class MapFilter extends React.Component {
           width={this.props.slice.width()}
           height={this.props.slice.height()}
         />
+        
       </div>
     );
   }

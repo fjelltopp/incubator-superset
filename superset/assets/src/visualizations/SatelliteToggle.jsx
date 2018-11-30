@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { Component } from 'react';
+import { Button } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 
-import './map_filter.css';
+import './SatelliteToggle.css';
 
 export default class SatelliteToggle extends Component {
     render() {
         return (
-            <button>Satellite</button>
+            <div className='satellite-toggle'>
+               <a className='satellite-toggle-button'>Satellite</a> 
+            </div>
         )
     }
 }
