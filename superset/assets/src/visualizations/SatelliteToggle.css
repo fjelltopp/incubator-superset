@@ -20,7 +20,7 @@ button.satellite-toggle-button {
     padding: 0;
     padding: 10px;
     text-decoration: none;
-    border-bottom: 1px solid rgba(0,0,0,0.25);
+    /* border-bottom: 1px solid rgba(0,0,0,0.25); */
     text-align: center;
     background-color: #3887be; 
     color: #ffffff;
