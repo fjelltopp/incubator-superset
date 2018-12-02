@@ -37,7 +37,7 @@ export default class LayerSelector extends React.PureComponent {
       [target.name]: target.checked,
     });
     this.props.toggleLayer(target.name, target.checked);
-
+    console.log("layer selector toggle layer state", this.state)
   }
 
   renderColorBar(colorBar) {

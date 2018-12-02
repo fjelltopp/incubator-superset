@@ -13,22 +13,18 @@ export default class SatelliteToggle extends Component {
     }
 
     handleClick() {
+        
         this.setState(state => ({
             visible: !state.visible
         }));
-        this.props.toggleLayer('satellite')
-        // var visibility = map.getLayoutProperty('satellite', 'visibility');
-        // if (visibility === 'visible') {
-        //     map.setLayoutProperty('satellite', 'visibility', 'none');
-        //     this.className = 'satellite-button';
-        // } else {
-        //     this.className = 'satellite-button-active';
-        //     map.setLayoutProperty('satellite', 'visibility', 'visible');
-        // }
+        this.props.toggleLayer('satellite', !this.state.visible)
+        console.log('print satellite toggle state', this.state)
+
     }
     // basically need to set up state with active/not active (in  layerselector
     // done by checkboxes, the way i got this to work is changing className...)
     render() {
+        console.log('satellite toggle state before', this.state)
         return (
             <div className='satellite-toggle'>
                <button className='satellite-toggle-button'
