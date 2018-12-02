@@ -197,17 +197,17 @@ class MapGLDraw extends MapGL {
 
     map.on('load', function () {
       //Adds satellite layer
-      map.addSource('satellite', {
+      map.addSource('streets-satellite', {
         type: 'raster',
-        url:'mapbox://mapbox.satellite'
+        url:'mapbox://mapbox.streets-satellite'
       })
       // Displays the data distributions
       addBgLayers(map,  geoJSONBgLayers, accessToken);
 
       map.addLayer({
-        'id' : 'satellite',
+        'id' : 'streets-satellite',
         'type' : 'raster',
-        'source' : 'satellite',
+        'source' : 'streets-satellite',
         'layout' : {
           'visibility' : 'visible'
         }
