@@ -167,7 +167,7 @@ class TableModelView(DatasourceModelView, DeleteMixin, YamlExportMixin):  # noqa
         'fetch_values_predicate', 'database', 'schema',
         'description', 'owner',
         'main_dttm_col', 'default_endpoint', 'offset', 'cache_timeout',
-        'is_sqllab_view', 'template_params',
+        'is_sqllab_view', 'template_params', 'geo_column_name',
     ]
     base_filters = [['id', DatasourceFilter, lambda: []]]
     show_columns = edit_columns + ['perm', 'slices']
@@ -242,6 +242,7 @@ class TableModelView(DatasourceModelView, DeleteMixin, YamlExportMixin):  # noqa
         'is_sqllab_view': _('SQL Lab View'),
         'template_params': _('Template parameters'),
         'modified': _('Modified'),
+        'geo_column_name': _('Geo column name'),
     }
 
     def pre_add(self, table):

@@ -279,6 +279,7 @@ class SqlaTable(Model, BaseDatasource):
     sql = Column(Text)
     is_sqllab_view = Column(Boolean, default=False)
     template_params = Column(Text)
+    geo_column_name = Column(String(32), default='geo')
 
     baselink = 'tablemodelview'
 
@@ -649,8 +650,9 @@ class SqlaTable(Model, BaseDatasource):
                 }
 
                 flt["val"] = new_flt_geo_values
-                flt["col"] = "geo"
-                col = "geo"
+                flt["col"] = self.geo_column_name
+
+                col = self.geo_column_name
                 col_obj = cols.get(col)
                 features = flt.get('val')["features"]
 
@@ -660,7 +662,7 @@ class SqlaTable(Model, BaseDatasource):
                 where_clause_and.append(
                     sa.func.ST_COVERS(
                         sa.func.ST_GeogFromText(eq.wkt),
-                        sa.cast(cols.get("geo").get_sqla_col(), Geometry)
+                        sa.cast(cols.get(col).get_sqla_col(), Geometry)
                     )
                 )
             if col_obj:
