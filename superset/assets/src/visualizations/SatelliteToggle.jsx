@@ -16,7 +16,7 @@ export default class SatelliteToggle extends Component {
         this.setState(state => ({
             visible: !state.visible
         }));
-        this.props.toggleLayer('satellite', !this.state.visible)
+        this.props.toggleLayer('streets-satellite', !this.state.visible)
     }
    
     render() {
