@@ -196,14 +196,13 @@ class MapGLDraw extends MapGL {
     const accessToken = this.props.mapboxApiAccessToken;
 
     map.on('load', function () {
-      // Displays the data distributions
-      addBgLayers(map,  geoJSONBgLayers, accessToken);
-
       //Adds satellite layer
       map.addSource('satellite', {
         type: 'raster',
         url:'mapbox://mapbox.satellite'
       })
+      // Displays the data distributions
+      addBgLayers(map,  geoJSONBgLayers, accessToken);
 
       map.addLayer({
         'id' : 'satellite',
@@ -228,40 +227,7 @@ class MapGLDraw extends MapGL {
         },
       });
 
-      // Creates a toggle for the satellite layer, and any other layers
-      // that we may want to be toggled in future.
-      var toggleableLayerIds = [ 'satellite' ];
 
-      for (var i = 0; i < toggleableLayerIds.length; i++) {
-          var id = toggleableLayerIds[i];
-
-          var link = document.createElement('a');
-          link.href = '#';
-          link.className = 'satellite-button-active';
-          link.textContent = id;
-
-          link.onclick = function (e) {
-              var clickedLayer = this.textContent;
-              e.preventDefault();
-              e.stopPropagation();
-
-              var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
-
-              if (visibility === 'visible') {
-                  map.setLayoutProperty(clickedLayer, 'visibility', 'none');
-                  this.className = 'satellite-button';
-              } else {
-                  this.className = 'satellite-button-active';
-                  map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
-              }
-          };
-
-          var canvas = document.getElementById('mapFilter')
-          var layers = document.getElementById('slice-container-2');
-          layers.appendChild(link);
-        }
-
-    
       // Displays the polygon drawing/selection controls
       this.draw = new MapboxDraw({
           displayControlsDefault: false,
@@ -430,8 +396,7 @@ class MapFilter extends React.Component {
   }
 
   render() {
-   console.log("this.props.json.data.geoJSONBgLayers", this.props.json.data.geoJSONBgLayers)
-   console.log("this.bgLayers", this.bgLayers)
+
     return (
       <div style={{ position: 'relative' }} className="mapFilter" id="mapFilter">
         <MapGLDraw

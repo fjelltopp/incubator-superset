@@ -8,9 +8,11 @@ div.satellite-toggle {
     outline: none;
     overflow-y: scroll;
     max-height: 200px;
+    top: 0px;
+    left: 0px;
 }
 
-a.satellite-toggle-button {
+button.satellite-toggle-button {
     font-size: 13px;
     color: #404040;
     display: block;
