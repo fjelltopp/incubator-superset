@@ -430,7 +430,8 @@ class MapFilter extends React.Component {
   }
 
   render() {
-   
+   console.log("this.props.json.data.geoJSONBgLayers", this.props.json.data.geoJSONBgLayers)
+   console.log("this.bgLayers", this.bgLayers)
     return (
       <div style={{ position: 'relative' }} className="mapFilter" id="mapFilter">
         <MapGLDraw
@@ -452,8 +453,11 @@ class MapFilter extends React.Component {
             position="br"
             categories={this.colors}
           />
-          <SatelliteToggle />
+
         </MapGLDraw>
+        <SatelliteToggle 
+            toggleLayer={this.toggleLayer}
+          />
         <LayerSelector
           position="br"
           toggleLayer={this.toggleLayer}
