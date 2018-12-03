@@ -25,7 +25,6 @@ import {
 import './mapbox.css';
 import sandboxedEval from '../modules/sandbox';
 import _ from 'lodash'
-import './map_filter.css'
 
 const NOOP = () => {};
 
