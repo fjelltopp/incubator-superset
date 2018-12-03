@@ -23,8 +23,12 @@ export default class SatelliteToggle extends Component {
 
         return (
             <div className='satellite-toggle'>
-               <button className='satellite-toggle-button'
-                  onClick={this.handleClick}>{this.state.visible ? 'Satellite: ON' : 'Satellite: OFF'}</button> 
+               <Button className='satellite-toggle-button'
+                  onClick={this.handleClick}>
+                  {this.state.visible ? 
+                    <i className="material-icons">satellite</i> : 
+                    <i className="material-icons">map</i>}
+               </Button> 
             </div>
         )
     }
