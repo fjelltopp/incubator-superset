@@ -421,6 +421,8 @@ class MapFilter extends React.Component {
         </MapGLDraw>
         <SatelliteToggle 
             toggleLayer={this.toggleLayer}
+            width={this.props.slice.width()}
+            height={this.props.slice.height()}
             position="br"
           />
         <LayerSelector

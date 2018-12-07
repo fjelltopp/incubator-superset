@@ -22,7 +22,9 @@ export default class SatelliteToggle extends Component {
     render() {
 
         return (
-            <div className='satellite-toggle'>
+            <div className='satellite-toggle'
+                 style={{ width: this.props.width, height: this.props.height }}
+            >
                <Button className='satellite-toggle-button'
                   onClick={this.handleClick}>
                   {this.state.visible ? 
