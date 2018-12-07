@@ -1,0 +1,23 @@
+div.satellite-toggle {
+    position: absolute;
+    top: 0px;
+    pointer-events: none;
+}
+
+button.satellite-toggle-button {
+    pointer-events: auto;
+    position: absolute;
+    top: 130px;
+    right: 8px; 
+    background: #fff;
+    padding: 5px;
+    border: 2px solid #dcdcdc;
+    border-radius: 8px;
+    width: 34px;
+    z-index: 3;
+}
+
+.satellite-toggle-button .material-icons{
+    font-size: 20px;
+    color: black;
+  }

@@ -11,6 +11,7 @@ import WebMercatorViewport from 'viewport-mercator-project';
 
 import Legend from './Legend';
 import LayerSelector from './LayerSelector';
+import SatelliteToggle from './SatelliteToggle'
 import { getColor } from '../modules/CategoricalColorNamespace';
 import {
   hexToRGB,
@@ -23,6 +24,7 @@ import {
 } from '../utils/common';
 import './mapbox.css';
 import sandboxedEval from '../modules/sandbox';
+import _ from 'lodash'
 
 const NOOP = () => {};
 
@@ -70,6 +72,8 @@ function getCategories(formData, queryData) {
   return categories;
 }
 
+
+
 /* addBgLayers
 * Adds background layers to the map from the given configuration
 */
@@ -90,6 +94,7 @@ function addBgLayers(map, conf, accessToken) {
        paint: { 'raster-opacity': conf[key].opacity },
        layout: { visibility: conf[key].visible ? 'visible' : 'none' },
      });
+
     } else if (conf[key].type === 'vector') {
       const paint = {
         line: {
@@ -109,6 +114,8 @@ function addBgLayers(map, conf, accessToken) {
       if (conf[key]['fill-type'] === 'symbol') {
         layout['icon-image'] = conf[key].icon;
       }
+
+
       map.addLayer({
         id: key,
         type: conf[key]['fill-type'],
@@ -122,6 +129,8 @@ function addBgLayers(map, conf, accessToken) {
     }
   }
 }
+
+// 
 
 
 /* MapGLDraw
@@ -186,8 +195,23 @@ class MapGLDraw extends MapGL {
     const accessToken = this.props.mapboxApiAccessToken;
 
     map.on('load', function () {
+      //Adds satellite layer
+      map.addSource('streets-satellite', {
+        type: 'raster',
+        url:'mapbox://mapbox.streets-satellite'
+      })
       // Displays the data distributions
       addBgLayers(map,  geoJSONBgLayers, accessToken);
+
+      map.addLayer({
+        'id' : 'streets-satellite',
+        'type' : 'raster',
+        'source' : 'streets-satellite',
+        'layout' : {
+          'visibility' : 'none'
+        }
+      });
+
       map.addLayer({
         id: 'points',
         type: 'circle',
@@ -201,6 +225,8 @@ class MapGLDraw extends MapGL {
           'circle-stroke-color': '#FFF',
         },
       });
+
+
       // Displays the polygon drawing/selection controls
       this.draw = new MapboxDraw({
           displayControlsDefault: false,
@@ -281,7 +307,6 @@ function getBgLayersLegend(layers) {
           icon: layers[key].icon,
         };
     }
-    console.log(legends);
     return legends;
     }
 
@@ -310,12 +335,13 @@ class MapFilter extends React.Component {
       this.props.slice.formData,
       this.props.json.data.geoJSON.features,
     );
-
+      
     this.bgLayers = getBgLayersLegend(this.props.json.data.geoJSONBgLayers);
     this.onViewportChange = this.onViewportChange.bind(this);
     this.toggleLayer = this.toggleLayer.bind(this);
     this.tick = this.tick.bind(this);
     this.updatePopup = this.updatePopup.bind(this);
+    // this.toggleSatellite = this.toggleSatellite.bind(this);
   }
 
   componentWillMount() {
@@ -342,6 +368,8 @@ class MapFilter extends React.Component {
       this.setState(() => ({ previousViewport: this.state.viewport }));
     }
   }
+
+  // Toggles the visibiliity of a layer
   toggleLayer(layer, visibility) {
     this.child.toggleLayer(layer, visibility);
   }
@@ -367,8 +395,9 @@ class MapFilter extends React.Component {
   }
 
   render() {
+
     return (
-      <div style={{ position: 'relative' }} className="mapFilter" >
+      <div style={{ position: 'relative' }} className="mapFilter" id="mapFilter">
         <MapGLDraw
           {...this.state.viewport}
           mapStyle={this.props.slice.formData.mapbox_style}
@@ -388,14 +417,22 @@ class MapFilter extends React.Component {
             position="br"
             categories={this.colors}
           />
+
         </MapGLDraw>
+        <SatelliteToggle 
+            toggleLayer={this.toggleLayer}
+            width={this.props.slice.width()}
+            height={this.props.slice.height()}
+            position="br"
+          />
         <LayerSelector
           position="br"
           toggleLayer={this.toggleLayer}
-          layers={this.bgLayers}
+          layers={this.bgLayers} 
           width={this.props.slice.width()}
           height={this.props.slice.height()}
         />
+        
       </div>
     );
   }
