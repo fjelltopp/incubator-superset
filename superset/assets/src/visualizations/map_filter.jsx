@@ -338,7 +338,7 @@ class MapFilter extends React.Component {
       
     this.bgLayers = getBgLayersLegend(this.props.json.data.geoJSONBgLayers);
     this.onViewportChange = this.onViewportChange.bind(this);
-    this.toggleLayer = this.toggleLayer.bind(this)
+    this.toggleLayer = this.toggleLayer.bind(this);
     this.tick = this.tick.bind(this);
     this.updatePopup = this.updatePopup.bind(this);
     // this.toggleSatellite = this.toggleSatellite.bind(this);
