@@ -208,7 +208,7 @@ class MapGLDraw extends MapGL {
         'type' : 'raster',
         'source' : 'streets-satellite',
         'layout' : {
-          'visibility' : 'visible'
+          'visibility' : 'none'
         }
       });
 

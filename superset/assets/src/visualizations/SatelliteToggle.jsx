@@ -7,7 +7,7 @@ import './SatelliteToggle.css';
 export default class SatelliteToggle extends Component {
     constructor(props) {
         super(props);
-        this.state = { visible: true };
+        this.state = { visible: false };
 
         this.handleClick = this.handleClick.bind(this);
     }
