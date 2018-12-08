@@ -47,6 +47,7 @@ class HeaderActionsDropdown extends React.PureComponent {
     };
 
     this.changeCss = this.changeCss.bind(this);
+    this.printPage = this.printPage.bind(this);
   }
 
   componentWillMount() {
@@ -68,6 +69,10 @@ class HeaderActionsDropdown extends React.PureComponent {
     });
     this.props.onChange();
     this.props.updateCss(css);
+  }
+
+  printPage() {
+    window.print();
   }
 
   render() {
@@ -163,6 +168,13 @@ class HeaderActionsDropdown extends React.PureComponent {
             onChange={this.changeCss}
           />
         )}
+        {
+            <MenuItem
+              onClick={this.printPage}
+            >
+              {t('Print')}
+            </MenuItem>
+          }
       </DropdownButton>
     );
   }
