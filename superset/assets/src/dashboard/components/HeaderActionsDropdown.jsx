@@ -168,13 +168,13 @@ class HeaderActionsDropdown extends React.PureComponent {
             onChange={this.changeCss}
           />
         )}
-        {
-            <MenuItem
-              onClick={this.printPage}
-            >
-              {t('Print')}
-            </MenuItem>
-          }
+        {!editMode && (
+          <MenuItem
+            onClick={this.printPage}
+          >
+            {t('Print')}
+          </MenuItem>
+        )}
       </DropdownButton>
     );
   }
