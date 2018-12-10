@@ -2731,7 +2731,53 @@ class MapFilterViz(BaseDeckGLViz):
             'color': fd.get('mapbox_color'),
             'geoJSONBgLayers': config.get('GEOJSON_LAYERS', {}),
         }
+    
+class MatrixVis(BaseViz):
 
+    """A basic html table that is sortable and searchable"""
+
+    viz_type = 'matrix'
+    verbose_name = _('Matrix Visualisaiton')
+    credits = 'a <a href="https://github.com/airbnb/superset">Superset</a> original'
+    is_timeseries = False
+    enforce_numerical_metrics = False
+
+    def should_be_timeseries(self):
+        return False
+    
+    def query_obj(self):
+        d = super(MatrixVis, self).query_obj()
+        fd = self.form_data
+
+        if not fd.get('groupby'):
+            raise Exception(_(
+                'Choose columns to group by'))
+
+        return d
+
+    def get_data(self, df):
+        fd = self.form_data
+        value = fd.get('metric')
+        group_by = fd.get('groupby')
+
+        pivot_table = pd.pivot_table(df, index=group_by[0], columns=group_by[1:])[value].fillna(0)
+
+        data = dict(
+                records=pivot_table.to_dict(),
+                columns=list(df.columns),
+            )
+
+        return data
+
+    def json_dumps(self, obj, sort_keys=False):
+        return json.dumps(
+            obj,
+            default=utils.json_iso_dttm_ser,
+            sort_keys=sort_keys,
+            ignore_nan=True)
+
+
+    
 
 viz_types = {
     o.viz_type: o for o in globals().values()

@@ -1857,6 +1857,18 @@ export const controls = {
     default: PRIMARY_COLOR,
     description: t('Pick a color'),
   },
+  color_positive: {
+    type: 'ColorPickerControl',
+    label: t('Color Positive'),
+    default: PRIMARY_COLOR,
+    description: t('Pick a color'),
+  },
+  color_zero: {
+    type: 'ColorPickerControl',
+    label: t('Color Zero'),
+    default: PRIMARY_COLOR,
+    description: t('Pick a color'),
+  },
 
   ranges: {
     type: 'TextControl',

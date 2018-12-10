@@ -1775,7 +1775,7 @@ export const visTypes = {
       },
       groupby: {
         description: t('One or many controls to group by. If grouping, latitude ' +
-          'and longitude columns must be present.'),
+		       'and longitude columns must be present.'),
       },
     },
   },
@@ -1827,7 +1827,31 @@ export const visTypes = {
       time_grain_sqla: timeGrainSqlaAnimationOverrides,
     },
   },
-  event_flow: {
+  matrix: {
+    label: t('Matrix'),
+    controlPanelSections: [
+      {
+        label: t('GROUP BY'),
+        description: t('Select a metric to display and columns to group by'),
+        expanded: true,
+        controlSetRows: [
+          ['groupby'],
+	  ['metric'],
+	  ['adhoc_filters']
+          ],
+      },{
+        label: t('Visual Tweaks'),
+        controlSetRows: [
+          ['show_values'],
+	  ['color_positive'],
+	  ['color_zero'],
+	  
+        ],
+      },
+    ],
+    controlOverrides: {}
+    },
+    event_flow: {
     label: t('Event flow'),
     requiresTime: true,
     controlPanelSections: [
