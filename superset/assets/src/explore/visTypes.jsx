@@ -1834,9 +1834,9 @@ export const visTypes = {
         label: t('Query'),
         expanded: true,
         controlSetRows: [
-	  ['groupby'],
-	  ['geo_file'],
-	  ['metric'],
+          ['groupby'],
+          ['geo_file'],
+          ['metric'],
           ['row_limit', 'filter_nulls'],
           ['adhoc_filters'],
         ],
@@ -1852,7 +1852,7 @@ export const visTypes = {
       {
         label: t('Color Scheme'),
         controlSetRows: [
-	  ['linear_color_scheme']
+          ['linear_color_scheme']
         ],
       },
       {
@@ -1885,16 +1885,15 @@ export const visTypes = {
         expanded: true,
         controlSetRows: [
           ['groupby'],
-	  ['metric'],
-	  ['adhoc_filters']
-          ],
+          ['metric'],
+          ['adhoc_filters'],
+        ],
       },{
         label: t('Visual Tweaks'),
         controlSetRows: [
           ['show_values'],
-	  ['color_positive'],
-	  ['color_zero'],
-	  
+          ['color_positive'],
+          ['color_zero'],
         ],
       },
     ],

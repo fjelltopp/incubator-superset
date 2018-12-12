@@ -1857,12 +1857,14 @@ export const controls = {
     default: PRIMARY_COLOR,
     description: t('Pick a color'),
   },
+
   color_positive: {
     type: 'ColorPickerControl',
     label: t('Color Positive'),
     default: PRIMARY_COLOR,
     description: t('Pick a color'),
   },
+
   color_zero: {
     type: 'ColorPickerControl',
     label: t('Color Zero'),
@@ -2278,6 +2280,7 @@ export const controls = {
     description: t('Name of GeoJSON file'),
     default: '',
   },
+
   normalized: {
     type: 'CheckboxControl',
     label: t('Normalized'),
