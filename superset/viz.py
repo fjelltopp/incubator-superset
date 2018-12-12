@@ -2736,17 +2736,14 @@ class MapFilterViz(BaseDeckGLViz):
 class ChoroplethMap(BaseDeckGLViz):
     viz_type = 'choropleth_map'
     verbose_name = _('Choropleth Map')
-#    spatial_control_keys = ['spatial']
     is_timeseries = False
     
     def query_obj(self):
         d = super(ChoroplethMap, self).query_obj()
         fd = self.form_data
-
         if not fd.get('groupby'):
             raise Exception(_(
                 'Choose columns to group by'))
-
         return d
     
     def get_data(self, df):
@@ -2764,12 +2761,10 @@ class ChoroplethMap(BaseDeckGLViz):
             current_value = row[value]
             values.append(current_value)
             tmp_location_value[location] = current_value
-
         for location_name, geo in geojson_dict.items():
             output.append({"type": "Feature",
                            "properties": {"value": tmp_location_value.get(location_name, 0)},
                            "geometry": geo})
-
         return {
             'data': {'type': 'FeatureCollection',
                      'features': output},
@@ -2801,25 +2796,18 @@ class MatrixVis(BaseViz):
     def query_obj(self):
         d = super(MatrixVis, self).query_obj()
         fd = self.form_data
-
         if not fd.get('groupby'):
-            raise Exception(_(
-                'Choose columns to group by'))
-
+            raise Exception(_('Choose columns to group by'))
         return d
 
     def get_data(self, df):
         fd = self.form_data
         value = fd.get('metric')
         group_by = fd.get('groupby')
-
         pivot_table = pd.pivot_table(df, index=group_by[0], columns=group_by[1:])[value].fillna(0)
-
         data = dict(
                 records=pivot_table.to_dict(),
-                columns=list(df.columns),
-            )
-
+                columns=list(df.columns))
         return data
 
     def json_dumps(self, obj, sort_keys=False):
@@ -2829,8 +2817,6 @@ class MatrixVis(BaseViz):
             sort_keys=sort_keys,
             ignore_nan=True)
 
-
-    
 
 viz_types = {
     o.viz_type: o for o in globals().values()
