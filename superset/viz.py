@@ -2751,7 +2751,6 @@ class ChoroplethMap(BaseDeckGLViz):
         self.fixed_value = None
         value = fd.get("metric")
         loc_col = fd.get("groupby")
-        logging.error(df)
         output = []
         geojson_dict = app.config["active_geo_filters"][fd["geo_file"]]
         values = []

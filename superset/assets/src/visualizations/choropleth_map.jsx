@@ -62,7 +62,7 @@ function addBgLayers(map, conf, accessToken) {
         },
       };
 
-      const layout = { visibility: conf[key].visible ? 'visible' : 'none' };
+      const layout = { visibility: 'none' };
       if (conf[key]['fill-type'] === 'symbol') {
         layout['icon-image'] = conf[key].icon;
       }
@@ -269,7 +269,7 @@ function getBgLayersLegend(layers) {
     for (const key in layers) {
         legends[key] = {
           color: layers[key].rgba,
-          enabled: layers[key].visible,
+          enabled: false,
           hex: layers[key].color,
           type: layers[key].type,
           'fill-type': layers[key]['fill-type'],

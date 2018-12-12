@@ -53,7 +53,7 @@ class MatrixVis extends React.PureComponent {
 
   return (
     <div>
-    <table className="table dataTable table-hover table-condensed dataframe">
+    <table className="table dataTable table-hover table-condensed dataframe table-bordered">
     <thead>
     <tr>{table_headings} </tr>
     </thead>
