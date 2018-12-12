@@ -1858,6 +1858,20 @@ export const controls = {
     description: t('Pick a color'),
   },
 
+  color_positive: {
+    type: 'ColorPickerControl',
+    label: t('Color Positive'),
+    default: PRIMARY_COLOR,
+    description: t('Pick a color'),
+  },
+
+  color_zero: {
+    type: 'ColorPickerControl',
+    label: t('Color Zero'),
+    default: PRIMARY_COLOR,
+    description: t('Pick a color'),
+  },
+
   ranges: {
     type: 'TextControl',
     label: t('Ranges'),
@@ -2257,6 +2271,14 @@ export const controls = {
     renderTrigger: true,
     description: t('Whether to fill the objects'),
     default: true,
+  },
+
+  geo_file: {
+    type: 'TextControl',
+    label: t('Name of GeoJson file'),
+    renderTrigger: false,
+    description: t('Name of GeoJSON file'),
+    default: '',
   },
 
   normalized: {
