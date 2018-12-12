@@ -2731,6 +2731,59 @@ class MapFilterViz(BaseDeckGLViz):
             'color': fd.get('mapbox_color'),
             'geoJSONBgLayers': config.get('GEOJSON_LAYERS', {}),
         }
+
+    
+class ChoroplethMap(BaseDeckGLViz):
+    viz_type = 'choropleth_map'
+    verbose_name = _('Choropleth Map')
+#    spatial_control_keys = ['spatial']
+    is_timeseries = False
+    
+    def query_obj(self):
+        d = super(ChoroplethMap, self).query_obj()
+        fd = self.form_data
+
+        if not fd.get('groupby'):
+            raise Exception(_(
+                'Choose columns to group by'))
+
+        return d
+    
+    def get_data(self, df):
+        fd = self.form_data
+        self.fixed_value = None
+        value = fd.get("metric")
+        loc_col = fd.get("groupby")
+        logging.error(df)
+        output = []
+        geojson_dict = app.config["active_geo_filters"][fd["geo_file"]]
+        values = []
+        tmp_location_value = {}
+        for i, row in df.iterrows():
+            location = row[loc_col].values[0]
+            current_value = row[value]
+            values.append(current_value)
+            tmp_location_value[location] = current_value
+
+        for location_name, geo in geojson_dict.items():
+            output.append({"type": "Feature",
+                           "properties": {"value": tmp_location_value.get(location_name, 0)},
+                           "geometry": geo})
+
+        return {
+            'data': {'type': 'FeatureCollection',
+                     'features': output},
+            'values': values,
+            'mapboxApiKey': config.get('MAPBOX_API_KEY'),
+            'mapStyle': fd.get('mapbox_style'),
+            'viewportLongitude': fd.get('viewport', {}).get('longitude'),
+            'viewportLatitude': fd.get('viewport', {}).get('latitude'),
+            'viewportZoom': fd.get('viewport', {}).get('zoom'),
+            'renderWhileDragging': fd.get('render_while_dragging'),
+            'tooltip': fd.get('rich_tooltip'),
+            'color': fd.get('mapbox_color'),
+            'geoJSONBgLayers': config.get('GEOJSON_LAYERS', {}),
+        }
     
 class MatrixVis(BaseViz):
 

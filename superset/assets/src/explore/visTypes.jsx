@@ -1827,6 +1827,55 @@ export const visTypes = {
       time_grain_sqla: timeGrainSqlaAnimationOverrides,
     },
   },
+  choropleth_map: {
+    label: t('Choropleth Map'),
+    controlPanelSections: [
+      {
+        label: t('Query'),
+        expanded: true,
+        controlSetRows: [
+	  ['groupby'],
+	  ['geo_file'],
+	  ['metric'],
+          ['row_limit', 'filter_nulls'],
+          ['adhoc_filters'],
+        ],
+      },
+      {
+        label: t('Map'),
+        expanded: true,
+        controlSetRows: [
+          ['mapbox_style', 'viewport'],
+          ['autozoom', null],
+        ],
+      },
+      {
+        label: t('Color Scheme'),
+        controlSetRows: [
+	  ['linear_color_scheme']
+        ],
+      },
+      {
+        label: t('Advanced'),
+        controlSetRows: [
+          ['js_columns'],
+          ['js_data_mutator'],
+          ['js_tooltip'],
+          ['js_onclick_href'],
+        ],
+      },
+    ],
+    controlOverrides: {
+      dimension: {
+        label: t('Categorical Color'),
+        description: t('Pick a dimension from which categorical colors are defined'),
+      },
+      size: {
+        validators: [],
+      },
+      time_grain_sqla: timeGrainSqlaAnimationOverrides,
+    },
+  },
   matrix: {
     label: t('Matrix'),
     controlPanelSections: [

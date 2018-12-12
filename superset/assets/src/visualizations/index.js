@@ -13,6 +13,7 @@ export const VIZ_TYPES = {
   compare: 'compare',
   directed_force: 'directed_force',
   chord: 'chord',
+  choropleth_map: 'choropleth_map',
   dist_bar: 'dist_bar',
   filter_box: 'filter_box',
   heatmap: 'heatmap',
@@ -93,6 +94,7 @@ const vizMap = {
   [VIZ_TYPES.time_pivot]: loadNvd3,
   [VIZ_TYPES.mapbox]: () => loadVis(import(/* webpackChunkName: "mapbox" */ './MapBox/adaptor.jsx')),
   [VIZ_TYPES.map_filter]: () => loadVis(import(/* webpackChunkName: "mapbox" */ './map_filter.jsx')),
+  [VIZ_TYPES.choropleth_map]: () => loadVis(import(/* webpackChunkName: "mapbox" */ './choropleth_map.jsx')),
   [VIZ_TYPES.matrix]: () => loadVis(import( './matrix.jsx')),
   [VIZ_TYPES.markup]: () => loadVis(import(/* webpackChunkName: "markup" */ './markup.js')),
   [VIZ_TYPES.para]: () =>

@@ -2271,6 +2271,13 @@ export const controls = {
     default: true,
   },
 
+  geo_file: {
+    type: 'TextControl',
+    label: t('Name of GeoJson file'),
+    renderTrigger: false,
+    description: t('Name of GeoJSON file'),
+    default: '',
+  },
   normalized: {
     type: 'CheckboxControl',
     label: t('Normalized'),
