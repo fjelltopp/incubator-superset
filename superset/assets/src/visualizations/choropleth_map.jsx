@@ -14,8 +14,8 @@ import LayerSelector from './LayerSelector';
 import SatelliteToggle from './SatelliteToggle'
 import { getColor } from '../modules/CategoricalColorNamespace';
 import {
-  hexToRGB,
-  rgbaToHex,
+  colorScalerFactory,
+  hexToRGB
 } from '../modules/colors';
 import {
   DEFAULT_LONGITUDE,
@@ -28,55 +28,7 @@ import _ from 'lodash'
 
 const NOOP = () => {};
 
-/* getCategories()
- *
- * Steps through every feature in a geoJSON data set, looks at the
- * cat_color value and assigns the feature a "color" property.  It
- * also returns a dictionary mapping cat_color values to a colour.  This
- * can then be used, for instance, when rendering the legend.
- *
- * Args:
- * fd - Form data storing the user settings when creating the slice.
- * data - The data to be visualised, returned by the query.
- *
- * Returns:
- * A dictionary mapping values of the colour category to the colour
- * from the colour scheme.
- */
 
-function getCategories(formData, queryData) {
-
-  const c = formData.color_picker || { r: 0, g: 0, b: 0, a: 1 };
-  const fixedColorRGBA = [c.r, c.g, c.b, 255 * c.a];
-  const fixedColorHex = rgbaToHex(fixedColorRGBA);
-  const categories = {};
-  queryData.forEach((d) => {
-    const featureProps = d.properties;
-    if (featureProps.cat_color != null) {
-      let color;
-      if (!categories.hasOwnProperty(featureProps.cat_color)) {
-        if (formData.dimension) {
-          color = getColor(featureProps.cat_color, formData.color_scheme);
-        } else {
-          color = fixedColorHex;
-        }
-        categories[featureProps.cat_color] = {
-          color: hexToRGB(color),
-          hex: color,
-          enabled: true,
-        };
-      }
-    featureProps.color = categories[featureProps.cat_color].hex;
-    }
-  });
-  return categories;
-}
-
-
-
-/* addBgLayers
-* Adds background layers to the map from the given configuration
-*/
 function addBgLayers(map, conf, accessToken) {
   for (const key in conf) {
     if (conf[key].type === 'raster') {
@@ -110,7 +62,7 @@ function addBgLayers(map, conf, accessToken) {
         },
       };
 
-      const layout = { visibility: conf[key].visible ? 'visible' : 'none' };
+      const layout = { visibility: 'none' };
       if (conf[key]['fill-type'] === 'symbol') {
         layout['icon-image'] = conf[key].icon;
       }
@@ -130,28 +82,18 @@ function addBgLayers(map, conf, accessToken) {
   }
 }
 
-// 
+function accessor(value, i, array){
+  return value;
+}
 
 
-/* MapGLDraw
- *
- * An extension of the MapGL component that harnesses the power of
- * Mapbox visualisation tools to render the map filter.
- */
+
 class MapGLDraw extends MapGL {
   constructor(props) {
     super(props);
     this.addTooltips = this.addTooltips.bind(this);
-    }
-
-  // Toggles the visibiliity of a layer
-  toggleLayer(layer, visibility) {
-    const map = this.getMap();
-    map.setLayoutProperty(layer, 'visibility',
-                            visibility ? 'visible' : 'none');
   }
-
-  addTooltips(layerName) {
+  addTooltips(layerName){
     if (this.props.slice.formData.js_tooltip) {
       const jsTooltip = sandboxedEval(this.props.slice.formData.js_tooltip);
       const updatePopup = this.props.updatePopup;
@@ -174,6 +116,12 @@ class MapGLDraw extends MapGL {
     }
   }
 
+  // Toggles the visibiliity of a layer
+  toggleLayer(layer, visibility) {
+    const map = this.getMap();
+    map.setLayoutProperty(layer, 'visibility',
+                          visibility ? 'visible' : 'none');
+  }
   getChildContext() {
     return {
       viewport: new WebMercatorViewport(this.props),
@@ -187,13 +135,15 @@ class MapGLDraw extends MapGL {
     super.componentDidMount();
 
     const map = this.getMap();
-    const data = this.props.geoJSON;
+    const data = this.props.json.data.data;
+    const values = this.props.json.data.values;
     const geoJSONBgLayers = this.props.geoJSONBgLayers;
     const slice = this.props.slice;
     const filters = this.props.slice.getFilters() || {};
     const addTooltips = this.addTooltips;
     const accessToken = this.props.mapboxApiAccessToken;
-
+    const color_scheme = this.props.json.form_data.linear_color_scheme;
+    
     map.on('load', function () {
       //Adds satellite layer
       map.addSource('streets-satellite', {
@@ -212,20 +162,41 @@ class MapGLDraw extends MapGL {
         }
       });
 
+      const scaler = colorScalerFactory(color_scheme, values, accessor)
+      const stops = scaler.ticks().map(x=> [x, scaler(x)])
+      const stops_opacity = [ [0, 0], [stops[0][0], 0.9]]
+      
       map.addLayer({
-        id: 'points',
-        type: 'circle',
-        source: {
-          type: 'geojson',
-          data,
-        },
-        paint: {
-          'circle-color': ['get', 'color'],
-          'circle-stroke-width': 1,
-          'circle-stroke-color': '#FFF',
-        },
+	id: 'polygons',
+	type: 'fill',
+	source: {
+	  type: 'geojson',
+	  data,
+	},
+	paint: {
+	  'fill-color': {
+	     'property': 'value',
+	     'stops': stops
+	  },
+	  'fill-opacity': {
+	    'property': 'value',
+	    'stops': stops_opacity
+	  }
+	}
       });
 
+       map.addLayer({
+	id: 'polygons-lines',
+	type: 'line',
+	source: {
+	  type: 'geojson',
+	  data,
+	},
+	paint: {
+	  'line-color': 'white',
+	  'line-opacity': 0.8
+	}
+      });
 
       // Displays the polygon drawing/selection controls
       this.draw = new MapboxDraw({
@@ -235,7 +206,7 @@ class MapGLDraw extends MapGL {
               trash: true,
             },
       });
-      addTooltips('points');
+      addTooltips('polygons');
       map.addControl(this.draw, 'top-right');
       map.resize();
 
@@ -298,7 +269,7 @@ function getBgLayersLegend(layers) {
     for (const key in layers) {
         legends[key] = {
           color: layers[key].rgba,
-          enabled: layers[key].visible,
+          enabled: false,
           hex: layers[key].color,
           type: layers[key].type,
           'fill-type': layers[key]['fill-type'],
@@ -311,11 +282,11 @@ function getBgLayersLegend(layers) {
     }
 
 
-/* MapFilter
- * A MapFilter component renders the map filter visualisation with all the
+/* ChoroplethMap
+ * A ChoroplethMap component renders the map filter visualisation with all the
  * necessary configurations and, crucially, keeps a state for the component.
  */
-class MapFilter extends React.Component {
+class ChoroplethMap extends React.Component {
 
   constructor(props) {
     super(props);
@@ -331,16 +302,18 @@ class MapFilter extends React.Component {
       },
       popup: null,
     };
-    this.colors = getCategories(
-      this.props.slice.formData,
-      this.props.json.data.geoJSON.features,
-    );
-      
     this.bgLayers = getBgLayersLegend(this.props.json.data.geoJSONBgLayers);
     this.onViewportChange = this.onViewportChange.bind(this);
     this.toggleLayer = this.toggleLayer.bind(this);
     this.tick = this.tick.bind(this);
     this.updatePopup = this.updatePopup.bind(this);
+    const scaler = colorScalerFactory(this.props.json.form_data.linear_color_scheme, data.values, accessor)
+    this.colors = {}
+
+    for (var x in scaler.ticks(5)){
+      this.colors[x] = {color: hexToRGB(scaler(x)), enabled: true}
+
+    }
     // this.toggleSatellite = this.toggleSatellite.bind(this);
   }
 
@@ -391,11 +364,10 @@ class MapFilter extends React.Component {
       >
         <div dangerouslySetInnerHTML={{__html: popup.html }} />
       </Popup>
-    );
+  );
   }
 
   render() {
-
     return (
       <div style={{ position: 'relative' }} className="mapFilter" id="mapFilter">
         <MapGLDraw
@@ -403,10 +375,10 @@ class MapFilter extends React.Component {
           mapStyle={this.props.slice.formData.mapbox_style}
           width={this.props.slice.width()}
           height={this.props.slice.height()}
+	  json={this.props.json}
           slice={this.props.slice}
           onViewportChange={this.onViewportChange}
           mapboxApiAccessToken={this.props.json.data.mapboxApiKey}
-          geoJSON={this.props.json.data.geoJSON}
           geoJSONBgLayers={this.props.json.data.geoJSONBgLayers}
           onRef={ref => (this.child = ref)}
           updatePopup={this.updatePopup}
@@ -438,25 +410,24 @@ class MapFilter extends React.Component {
   }
 }
 
-MapFilter.propTypes = {
+ChoroplethMap.propTypes = {
   json: PropTypes.object,
   slice: PropTypes.object,
   setControlValue: PropTypes.func,
 };
 
 
-/* mapFilter(slice, json, setControlValue)
+/* choroplethMap(slice, json, setControlValue)
  *
  * This is the hook called by superset to render the visualisation.  We are
  * given data associated with the slice and the JSON returned from the backend.
- * For simplicity all this data is passed to the MapFilter component.
+ * For simplicity all this data is passed to the ChoroplethMap component.
  */
-function mapFilter(slice, json, setControlValue) {
-  console.log(slice);
+function choroplethMap(slice, json, setControlValue) {
   const div = d3.select(slice.selector);
   div.selectAll('*').remove();
   ReactDOM.render(
-    <MapFilter
+    <ChoroplethMap
       json={json}
       slice={slice}
       setControlValue={setControlValue || NOOP}
@@ -465,4 +436,4 @@ function mapFilter(slice, json, setControlValue) {
   );
 }
 
-module.exports = mapFilter;
+module.exports = choroplethMap

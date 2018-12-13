@@ -1776,7 +1776,7 @@ export const visTypes = {
       },
       groupby: {
         description: t('One or many controls to group by. If grouping, latitude ' +
-          'and longitude columns must be present.'),
+		       'and longitude columns must be present.'),
       },
     },
   },
@@ -1828,7 +1828,79 @@ export const visTypes = {
       time_grain_sqla: timeGrainSqlaAnimationOverrides,
     },
   },
-  event_flow: {
+  choropleth_map: {
+    label: t('Choropleth Map'),
+    controlPanelSections: [
+      {
+        label: t('Query'),
+        expanded: true,
+        controlSetRows: [
+          ['groupby'],
+          ['geo_file'],
+          ['metric'],
+          ['row_limit', 'filter_nulls'],
+          ['adhoc_filters'],
+        ],
+      },
+      {
+        label: t('Map'),
+        expanded: true,
+        controlSetRows: [
+          ['mapbox_style', 'viewport'],
+          ['autozoom', null],
+        ],
+      },
+      {
+        label: t('Color Scheme'),
+        controlSetRows: [
+          ['linear_color_scheme']
+        ],
+      },
+      {
+        label: t('Advanced'),
+        controlSetRows: [
+          ['js_columns'],
+          ['js_data_mutator'],
+          ['js_tooltip'],
+          ['js_onclick_href'],
+        ],
+      },
+    ],
+    controlOverrides: {
+      dimension: {
+        label: t('Categorical Color'),
+        description: t('Pick a dimension from which categorical colors are defined'),
+      },
+      size: {
+        validators: [],
+      },
+      time_grain_sqla: timeGrainSqlaAnimationOverrides,
+    },
+  },
+  matrix: {
+    label: t('Matrix'),
+    controlPanelSections: [
+      {
+        label: t('GROUP BY'),
+        description: t('Select a metric to display and columns to group by'),
+        expanded: true,
+        controlSetRows: [
+          ['groupby'],
+          ['metric'],
+          ['adhoc_filters'],
+        ],
+      },{
+        label: t('Visual Tweaks'),
+        controlSetRows: [
+          ['show_values'],
+          ['color_positive'],
+          ['color_zero'],
+        ],
+      },
+    ],
+    controlOverrides: {}
+    },
+    event_flow: {
     label: t('Event flow'),
     requiresTime: true,
     controlPanelSections: [

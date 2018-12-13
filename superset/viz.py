@@ -2732,6 +2732,90 @@ class MapFilterViz(BaseDeckGLViz):
             'geoJSONBgLayers': config.get('GEOJSON_LAYERS', {}),
         }
 
+    
+class ChoroplethMap(BaseDeckGLViz):
+    viz_type = 'choropleth_map'
+    verbose_name = _('Choropleth Map')
+    is_timeseries = False
+    
+    def query_obj(self):
+        d = super(ChoroplethMap, self).query_obj()
+        fd = self.form_data
+        if not fd.get('groupby'):
+            raise Exception(_(
+                'Choose columns to group by'))
+        return d
+    
+    def get_data(self, df):
+        fd = self.form_data
+        self.fixed_value = None
+        value = fd.get("metric")
+        loc_col = fd.get("groupby")
+        output = []
+        geojson_dict = app.config["active_geo_filters"][fd["geo_file"]]
+        values = []
+        tmp_location_value = {}
+        for i, row in df.iterrows():
+            location = row[loc_col].values[0]
+            current_value = row[value]
+            values.append(current_value)
+            tmp_location_value[location] = current_value
+        for location_name, geo in geojson_dict.items():
+            output.append({"type": "Feature",
+                           "properties": {"value": tmp_location_value.get(location_name, 0)},
+                           "geometry": geo})
+        return {
+            'data': {'type': 'FeatureCollection',
+                     'features': output},
+            'values': values,
+            'mapboxApiKey': config.get('MAPBOX_API_KEY'),
+            'mapStyle': fd.get('mapbox_style'),
+            'viewportLongitude': fd.get('viewport', {}).get('longitude'),
+            'viewportLatitude': fd.get('viewport', {}).get('latitude'),
+            'viewportZoom': fd.get('viewport', {}).get('zoom'),
+            'renderWhileDragging': fd.get('render_while_dragging'),
+            'tooltip': fd.get('rich_tooltip'),
+            'color': fd.get('mapbox_color'),
+            'geoJSONBgLayers': config.get('GEOJSON_LAYERS', {}),
+        }
+    
+class MatrixVis(BaseViz):
+
+    """A basic html table that is sortable and searchable"""
+
+    viz_type = 'matrix'
+    verbose_name = _('Matrix Visualisaiton')
+    credits = 'a <a href="https://github.com/airbnb/superset">Superset</a> original'
+    is_timeseries = False
+    enforce_numerical_metrics = False
+
+    def should_be_timeseries(self):
+        return False
+    
+    def query_obj(self):
+        d = super(MatrixVis, self).query_obj()
+        fd = self.form_data
+        if not fd.get('groupby'):
+            raise Exception(_('Choose columns to group by'))
+        return d
+
+    def get_data(self, df):
+        fd = self.form_data
+        value = fd.get('metric')
+        group_by = fd.get('groupby')
+        pivot_table = pd.pivot_table(df, index=group_by[0], columns=group_by[1:])[value].fillna(0)
+        data = dict(
+                records=pivot_table.to_dict(),
+                columns=list(df.columns))
+        return data
+
+    def json_dumps(self, obj, sort_keys=False):
+        return json.dumps(
+            obj,
+            default=utils.json_iso_dttm_ser,
+            sort_keys=sort_keys,
+            ignore_nan=True)
+
 
 viz_types = {
     o.viz_type: o for o in globals().values()
