@@ -637,7 +637,7 @@ class SqlaTable(Model, BaseDatasource):
             col = flt['col']
             col_obj = cols.get(col)
             op = flt['op']
-            if op == "geo_within":
+            if op == "geo_within" and col != self.geo_column_name:
                 def geo_features_gen(values):
                     for value in values:
                         val_geo_ = app.config.get("active_geo_filters")[col][value]
