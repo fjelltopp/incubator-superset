@@ -1449,7 +1449,7 @@ export const controls = {
     type: 'CheckboxControl',
     label: t('Is Geofilterable'),
     default: false,
-    description: t('Check to make filters in this herams filter geofilterable'),
+    description: t('Check to make filters in this filter box geofilterable'),
   } ,
 
   show_datatable: {
