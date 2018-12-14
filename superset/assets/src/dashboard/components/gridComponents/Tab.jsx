@@ -214,7 +214,7 @@ export default class Tab extends React.PureComponent {
               }
               editMode={editMode}
             >
-              <EditableTitle
+              <EditableTitle style={{width: 'auto'}}
                 title={component.meta.text}
                 canEdit={editMode && isFocused}
                 onSaveTitle={this.handleChangeText}
