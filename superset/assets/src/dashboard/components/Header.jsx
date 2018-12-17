@@ -1,6 +1,7 @@
 /* eslint-env browser */
 import React from 'react';
 import PropTypes from 'prop-types';
+import Media from 'react-media';
 
 import HeaderActionsDropdown from './HeaderActionsDropdown';
 import EditableTitle from '../../components/EditableTitle';
@@ -210,9 +211,16 @@ class Header extends React.PureComponent {
           </span>
         </div>
 
-        <div className="button-container">
+        <Media query="print">
+          {matches => 
+            matches ? (
+              null
+            ) : (
+              <div className="button-container">
           {userCanSaveAs && (
             <div className="button-container">
+              
+        
               {editMode && (
                 <Button
                   bsSize="small"
@@ -278,6 +286,7 @@ class Header extends React.PureComponent {
           {!editMode &&
             !hasUnsavedChanges && (
               <Button
+                className="edit-dashboard-button"
                 bsSize="small"
                 onClick={this.toggleEditMode}
                 bsStyle={popButton ? 'primary' : undefined}
@@ -306,7 +315,8 @@ class Header extends React.PureComponent {
             userCanEdit={userCanEdit}
             userCanSave={userCanSaveAs}
           />
-        </div>
+        </div>)}
+        </Media>
       </div>
     );
   }
