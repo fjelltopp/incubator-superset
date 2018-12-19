@@ -631,26 +631,37 @@ class SqlaTable(Model, BaseDatasource):
 
         where_clause_and = []
         having_clause_and = []
+
+        import sys
+        sys.path.append('/vagrant/vagrant_conf/pycharm-debug.egg')
+
+        import pydevd;
+
+        # pydevd.settrace('docker.for.mac.localhost', port=36819, stdoutToServer=True, stderrToServer=True)
+
+
         for flt in filter:
             if not all([flt.get(s) for s in ['col', 'op']]):
                 continue
             col = flt['col']
             col_obj = cols.get(col)
             op = flt['op']
-            if op == "geo_within" and col != self.geo_column_name:
-                def geo_features_gen(values):
-                    for value in values:
-                        val_geo_ = app.config.get("active_geo_filters")[col][value]
-                        yield {"type": "feature", "geometry": val_geo_}
 
-                old_vals_ = flt.get('val')
-                logging.info(old_vals_)
-                new_flt_geo_values = {
-                    "features": list(geo_features_gen(old_vals_))
-                }
+            if op == "geo_within" or flt['col'] == self.geo_column_name:
+                if col in self.herams_geofitlerable_names():
+                    def geo_features_gen(values):
+                        for value in values:
+                            val_geo_ = app.config.get("active_geo_filters")[col][value]
+                            yield {"type": "feature", "geometry": val_geo_}
 
-                flt["val"] = new_flt_geo_values
-                flt["col"] = self.geo_column_name
+                    old_vals_ = flt.get('val')
+                    logging.info(old_vals_)
+                    new_flt_geo_values = {
+                        "features": list(geo_features_gen(old_vals_))
+                    }
+
+                    flt["val"] = new_flt_geo_values
+                    flt["col"] = self.geo_column_name
 
                 col = self.geo_column_name
                 col_obj = cols.get(col)
@@ -831,6 +842,11 @@ class SqlaTable(Model, BaseDatasource):
             duration=datetime.now() - qry_start_dttm,
             query=sql,
             error_message=error_message)
+
+    def herams_geofitlerable_names(self):
+        geofilterable_columns = db.session.query(TableColumn).join(SqlaTable).filter(
+            TableColumn.geofilterable == True).all()
+        return { col.column_name  for col in geofilterable_columns }
 
     def get_sqla_table_object(self):
         return self.database.get_table(self.table_name, schema=self.schema)
