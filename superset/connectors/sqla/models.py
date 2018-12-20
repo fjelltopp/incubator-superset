@@ -632,14 +632,6 @@ class SqlaTable(Model, BaseDatasource):
         where_clause_and = []
         having_clause_and = []
 
-        import sys
-        sys.path.append('/vagrant/vagrant_conf/pycharm-debug.egg')
-
-        import pydevd;
-
-        # pydevd.settrace('docker.for.mac.localhost', port=36819, stdoutToServer=True, stderrToServer=True)
-
-
         for flt in filter:
             if not all([flt.get(s) for s in ['col', 'op']]):
                 continue
@@ -648,7 +640,7 @@ class SqlaTable(Model, BaseDatasource):
             op = flt['op']
 
             if op == "geo_within" or flt['col'] == self.geo_column_name:
-                if col in self.herams_geofitlerable_names():
+                if col in self.geofitlerable_column_names():
                     def geo_features_gen(values):
                         for value in values:
                             val_geo_ = app.config.get("active_geo_filters")[col][value]
@@ -843,7 +835,7 @@ class SqlaTable(Model, BaseDatasource):
             query=sql,
             error_message=error_message)
 
-    def herams_geofitlerable_names(self):
+    def geofitlerable_column_names(self):
         geofilterable_columns = db.session.query(TableColumn).join(SqlaTable).filter(
             TableColumn.geofilterable == True).all()
         return { col.column_name  for col in geofilterable_columns }
