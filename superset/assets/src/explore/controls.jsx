@@ -1445,6 +1445,13 @@ export const controls = {
     description: t('Check to include Time Origin dropdown'),
   },
 
+  geofilterable: {
+    type: 'CheckboxControl',
+    label: t('Is Geofilterable'),
+    default: false,
+    description: t('Check to make filters in this filter box geofilterable'),
+  } ,
+
   show_datatable: {
     type: 'CheckboxControl',
     label: t('Data Table'),

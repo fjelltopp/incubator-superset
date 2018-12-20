@@ -27,7 +27,11 @@ export function setUnsavedChanges(hasUnsavedChanges) {
 }
 
 export const CHANGE_FILTER = 'CHANGE_FILTER';
-export function changeFilter(chart, col, vals, merge = true, refresh = true, op = "in") {
+export function changeFilter(chart, col, vals, merge = true, refresh = true, operation = "in") {
+  let op = operation;
+  if (chart.formData.geofilterable === true) {
+    op = 'geo_within';
+  }
   Logger.append(LOG_ACTIONS_CHANGE_DASHBOARD_FILTER, {
     id: chart.id,
     column: col,
@@ -35,7 +39,7 @@ export function changeFilter(chart, col, vals, merge = true, refresh = true, op 
     merge,
     refresh,
   });
-    return { type: CHANGE_FILTER, chart, col, vals, merge, refresh, op };
+  return { type: CHANGE_FILTER, chart, col, vals, merge, refresh, op };
 }
 
 export const ADD_SLICE = 'ADD_SLICE';
