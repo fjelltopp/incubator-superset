@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import d3 from 'd3';
 import Mustache from 'mustache';
-import { Table, Thead, Th, Tr, Td } from 'reactable';
+import { Table, Thead, Th, Tr, Td } from 'reactable-arc';
 
 import MetricOption from '../../components/MetricOption';
 import { formatDateThunk } from '../../modules/dates';

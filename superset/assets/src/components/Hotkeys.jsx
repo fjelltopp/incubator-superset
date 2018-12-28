@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { OverlayTrigger, Popover } from 'react-bootstrap';
-import { Table } from 'reactable';
+import { Table } from 'reactable-arc';
 
 import Mousetrap from 'mousetrap';
 
