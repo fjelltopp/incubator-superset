@@ -32,7 +32,8 @@ class TableColumnInlineView(CompactCRUDMixin, SupersetModelView):  # noqa
         'column_name', 'verbose_name', 'description',
         'type', 'groupby', 'filterable',
         'table', 'expression',
-        'is_dttm', 'python_date_format', 'database_expression']
+        'is_dttm', 'python_date_format', 'database_expression',
+        'geojson_file', 'geojson_filter_name_key']
     add_columns = edit_columns
     list_columns = [
         'column_name', 'verbose_name', 'type', 'groupby', 'filterable',
@@ -75,6 +76,12 @@ class TableColumnInlineView(CompactCRUDMixin, SupersetModelView):  # noqa
             "`Ex: TO_DATE('{}', 'YYYY-MM-DD HH24:MI:SS')` for Oracle "
             'Superset uses default expression based on DB URI if this '
             'field is blank.', True),
+        'geojson_file': _(
+            'Upload the geojson file with configuration for the specific column'
+        ),
+        'geojson_filter_name_key': _(
+            'The name of the key in geojson file which specifies the filter name (e.g. \'ADM1_EN\')'
+        ),
     }
     label_columns = {
         'column_name': _('Column'),

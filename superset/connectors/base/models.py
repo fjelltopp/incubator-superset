@@ -5,6 +5,7 @@ from past.builtins import basestring
 from sqlalchemy import (
     and_, Boolean, Column, Integer, String, Text,
 )
+from flask_appbuilder.models.mixins import FileColumn
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import foreign, relationship
 
@@ -360,6 +361,8 @@ class BaseColumn(AuditMixinNullable, ImportMixin):
     min = Column(Boolean, default=False)
     filterable = Column(Boolean, default=False)
     geofilterable = Column(Boolean, default=False)
+    geojson_file = Column(FileColumn())
+    geojson_filter_name_key = Column(String(225), default=False)
     description = Column(Text)
     is_dttm = None
 

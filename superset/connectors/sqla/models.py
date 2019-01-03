@@ -643,7 +643,16 @@ class SqlaTable(Model, BaseDatasource):
                 if col in self.geofitlerable_column_names():
                     def geo_features_gen(values):
                         for value in values:
-                            val_geo_ = app.config.get("active_geo_filters")[col][value]
+                            db_column = db.session.query(TableColumn).filter(TableColumn.column_name == col).first()
+                            geojson_file = db_column.geojson_file
+                            geojson_filter_name_key = db_column.geojson_filter_name_key
+                            if geojson_file and geojson_filter_name_key:
+                                with open('superset/app/static/uploads/' + geojson_file) as f:
+                                    geojson = json.loads(f.read())
+                                    for feature in geojson['features']:
+                                        if feature['properties'][geojson_filter_name_key] == value:
+                                            val_geo_ = feature['geometry']
+
                             yield {"type": "feature", "geometry": val_geo_}
 
                     old_vals_ = flt.get('val')
