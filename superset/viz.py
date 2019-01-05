@@ -39,7 +39,7 @@ from superset.utils import (
     merge_extra_filters,
     to_adhoc,
 )
-
+from superset import app, db, utils
 
 config = app.config
 stats_logger = config.get('STATS_LOGGER')
@@ -2752,7 +2752,6 @@ class ChoroplethMap(BaseDeckGLViz):
         value = fd.get("metric")
         loc_col = fd.get("groupby")
         output = []
-        geojson_dict = app.config["active_geo_filters"][fd["geo_file"]]
         values = []
         tmp_location_value = {}
         for i, row in df.iterrows():
@@ -2760,10 +2759,22 @@ class ChoroplethMap(BaseDeckGLViz):
             current_value = row[value]
             values.append(current_value)
             tmp_location_value[location] = current_value
-        for location_name, geo in geojson_dict.items():
-            output.append({"type": "Feature",
-                           "properties": {"value": tmp_location_value.get(location_name, 0)},
-                           "geometry": geo})
+
+        from superset.connectors.sqla.models import TableColumn
+        db_column = db.session.query(TableColumn).filter(TableColumn.column_name == loc_col[0]).first()
+        geojson_file = db_column.geojson_file
+        geojson_filter_name_key = db_column.geojson_filter_name_key
+
+        if geojson_file and geojson_filter_name_key:
+            with open(config['UPLOAD_FOLDER'] + geojson_file) as f:
+                geojson = json.loads(f.read())
+                for feature in geojson['features']:
+                    location_name = feature['properties'][geojson_filter_name_key]
+                    output.append({"type": "Feature",
+                                   "properties": {"value": tmp_location_value.get(location_name, 0)},
+                                   "geometry": feature['geometry']
+                                   })
+
         return {
             'data': {'type': 'FeatureCollection',
                      'features': output},
