@@ -647,7 +647,7 @@ class SqlaTable(Model, BaseDatasource):
                             geojson_file = db_column.geojson_file
                             geojson_filter_name_key = db_column.geojson_filter_name_key
                             if geojson_file and geojson_filter_name_key:
-                                with open('superset/app/static/uploads/' + geojson_file) as f:
+                                with open(config['UPLOAD_FOLDER'] + geojson_file) as f:
                                     geojson = json.loads(f.read())
                                     for feature in geojson['features']:
                                         if feature['properties'][geojson_filter_name_key] == value:
