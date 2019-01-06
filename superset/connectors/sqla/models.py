@@ -643,15 +643,10 @@ class SqlaTable(Model, BaseDatasource):
                 if col in self.geofitlerable_column_names():
                     def geo_features_gen(values):
                         for value in values:
-                            db_column = db.session.query(TableColumn).filter(TableColumn.column_name == col).first()
-                            geojson_file = db_column.geojson_file
-                            geojson_filter_name_key = db_column.geojson_filter_name_key
-                            if geojson_file and geojson_filter_name_key:
-                                with open(config['UPLOAD_FOLDER'] + geojson_file) as f:
-                                    geojson = json.loads(f.read())
-                                    for feature in geojson['features']:
-                                        if feature['properties'][geojson_filter_name_key] == value:
-                                            val_geo_ = feature['geometry']
+                            geojson_contents = self.read_geojson(col)
+                            for line in geojson_contents:
+                                if line['name'] == value:
+                                    val_geo_ = line['geometry']
 
                             yield {"type": "feature", "geometry": val_geo_}
 
@@ -950,6 +945,19 @@ class SqlaTable(Model, BaseDatasource):
     def default_query(qry):
         return qry.filter_by(is_sqllab_view=False)
 
+    @classmethod
+    def read_geojson(cls, column_name):
+        db_column = db.session.query(TableColumn).filter(TableColumn.column_name == column_name).first()
+        geojson_file = db_column.geojson_file
+        geojson_filter_name_key = db_column.geojson_filter_name_key
+        output = []
+        if geojson_file and geojson_filter_name_key:
+            with open(config['UPLOAD_FOLDER'] + geojson_file) as f:
+                geojson = json.loads(f.read())
+                for feature in geojson['features']:
+                    output.append({'name': feature['properties'][geojson_filter_name_key],
+                                   'geometry': feature['geometry']})
+        return output
 
 sa.event.listen(SqlaTable, 'after_insert', security_manager.set_perm)
 sa.event.listen(SqlaTable, 'after_update', security_manager.set_perm)

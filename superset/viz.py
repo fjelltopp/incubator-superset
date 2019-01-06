@@ -39,7 +39,6 @@ from superset.utils import (
     merge_extra_filters,
     to_adhoc,
 )
-from superset import app, db, utils
 
 config = app.config
 stats_logger = config.get('STATS_LOGGER')
@@ -2760,20 +2759,14 @@ class ChoroplethMap(BaseDeckGLViz):
             values.append(current_value)
             tmp_location_value[location] = current_value
 
-        from superset.connectors.sqla.models import TableColumn
-        db_column = db.session.query(TableColumn).filter(TableColumn.column_name == loc_col[0]).first()
-        geojson_file = db_column.geojson_file
-        geojson_filter_name_key = db_column.geojson_filter_name_key
+        from superset.connectors.sqla.models import SqlaTable
 
-        if geojson_file and geojson_filter_name_key:
-            with open(config['UPLOAD_FOLDER'] + geojson_file) as f:
-                geojson = json.loads(f.read())
-                for feature in geojson['features']:
-                    location_name = feature['properties'][geojson_filter_name_key]
-                    output.append({"type": "Feature",
-                                   "properties": {"value": tmp_location_value.get(location_name, 0)},
-                                   "geometry": feature['geometry']
-                                   })
+        geojson_contents = SqlaTable.read_geojson(loc_col[0])
+        for line in geojson_contents:
+            output.append({"type": "Feature",
+                           "properties": {"value": tmp_location_value.get(line['name'], 0)},
+                           "geometry": line['geometry']
+            })
 
         return {
             'data': {'type': 'FeatureCollection',
