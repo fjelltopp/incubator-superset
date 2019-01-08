@@ -1835,8 +1835,7 @@ export const visTypes = {
         label: t('Query'),
         expanded: true,
         controlSetRows: [
-          ['groupby'],
-          ['geo_file'],
+          ['groupby_geofilterable'],
           ['metric'],
           ['row_limit', 'filter_nulls'],
           ['adhoc_filters'],

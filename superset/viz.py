@@ -75,6 +75,7 @@ class BaseViz(object):
             'token', 'token_' + uuid.uuid4().hex[:8])
 
         self.groupby = self.form_data.get('groupby') or []
+        self.groupby_geofilterable = self.form_data.get('groupby_geofilterable') or []
         self.time_shift = timedelta()
 
         self.status = None
@@ -2740,7 +2741,7 @@ class ChoroplethMap(BaseDeckGLViz):
     def query_obj(self):
         d = super(ChoroplethMap, self).query_obj()
         fd = self.form_data
-        if not fd.get('groupby'):
+        if not fd.get('groupby_geofilterable'):
             raise Exception(_(
                 'Choose columns to group by'))
         return d
@@ -2749,7 +2750,7 @@ class ChoroplethMap(BaseDeckGLViz):
         fd = self.form_data
         self.fixed_value = None
         value = fd.get("metric")
-        loc_col = fd.get("groupby")
+        loc_col = fd.get("groupby_geofilterable")
         output = []
         values = []
         tmp_location_value = {}
