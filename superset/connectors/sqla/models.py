@@ -17,6 +17,7 @@ from sqlalchemy.sql import column, literal_column, table, text
 from sqlalchemy.sql.expression import TextAsFrom
 import sqlparse
 import json
+import os
 
 from superset import app, db, import_util, security_manager, utils
 from superset.connectors.base.models import BaseColumn, BaseDatasource, BaseMetric
@@ -644,9 +645,8 @@ class SqlaTable(Model, BaseDatasource):
                     def geo_features_gen(values):
                         for value in values:
                             geojson_contents = self.read_geojson(col)
-                            for line in geojson_contents:
-                                if line['name'] == value:
-                                    val_geo_ = line['geometry']
+
+                            val_geo_ = [line['geometry'] for line in geojson_contents if line['name'] == value][0]
 
                             yield {"type": "feature", "geometry": val_geo_}
 
@@ -952,11 +952,10 @@ class SqlaTable(Model, BaseDatasource):
         geojson_filter_name_key = db_column.geojson_filter_name_key
         output = []
         if geojson_file and geojson_filter_name_key:
-            with open(config['UPLOAD_FOLDER'] + geojson_file) as f:
+            with open(os.path.join(config['UPLOAD_FOLDER'], geojson_file)) as f:
                 geojson = json.loads(f.read())
-                for feature in geojson['features']:
-                    output.append({'name': feature['properties'][geojson_filter_name_key],
-                                   'geometry': feature['geometry']})
+                output = [{'name': feature['properties'][geojson_filter_name_key],
+                            'geometry': feature['geometry']} for feature in geojson['features']]
         return output
 
 sa.event.listen(SqlaTable, 'after_insert', security_manager.set_perm)
