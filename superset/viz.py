@@ -362,7 +362,6 @@ class BaseViz(object):
         """Returns a payload of metadata and data"""
         self.run_extra_queries()
         payload = self.get_df_payload(query_obj)
-
         df = payload.get('df')
         if self.status != utils.QueryStatus.FAILED:
             if df is not None and df.empty:
@@ -2739,11 +2738,12 @@ class ChoroplethMap(BaseDeckGLViz):
     is_timeseries = False
     
     def query_obj(self):
-        d = super(ChoroplethMap, self).query_obj()
         fd = self.form_data
         if not fd.get('groupby_geofilterable'):
             raise Exception(_(
                 'Choose columns to group by'))
+        fd['groupby'] = fd.get('groupby_geofilterable')
+        d = super(ChoroplethMap, self).query_obj()
         return d
     
     def get_data(self, df):
