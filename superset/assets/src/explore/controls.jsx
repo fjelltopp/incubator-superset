@@ -617,6 +617,13 @@ export const controls = {
   },
 
   groupby: groupByControl,
+  groupby_geofilterable: {
+      ...groupByControl,
+      label: t('Geofilterable column to group by'),
+      filterOption: (opt, _) => (
+        opt.geofilterable
+     ),
+  },
   dimension: {
     ...groupByControl,
     label: t('Dimension'),
@@ -2278,14 +2285,6 @@ export const controls = {
     renderTrigger: true,
     description: t('Whether to fill the objects'),
     default: true,
-  },
-
-  geo_file: {
-    type: 'TextControl',
-    label: t('Name of GeoJson file'),
-    renderTrigger: false,
-    description: t('Name of GeoJSON file'),
-    default: '',
   },
 
   normalized: {
