@@ -17,6 +17,7 @@ from sqlalchemy.sql import column, literal_column, table, text
 from sqlalchemy.sql.expression import TextAsFrom
 import sqlparse
 import json
+import os
 
 from superset import app, db, import_util, security_manager, utils
 from superset.connectors.base.models import BaseColumn, BaseDatasource, BaseMetric
@@ -643,7 +644,10 @@ class SqlaTable(Model, BaseDatasource):
                 if col in self.geofitlerable_column_names():
                     def geo_features_gen(values):
                         for value in values:
-                            val_geo_ = app.config.get("active_geo_filters")[col][value]
+                            geojson_contents = self.read_geojson(col)
+
+                            val_geo_ = [line['geometry'] for line in geojson_contents if line['name'] == value][0]
+
                             yield {"type": "feature", "geometry": val_geo_}
 
                     old_vals_ = flt.get('val')
@@ -941,6 +945,18 @@ class SqlaTable(Model, BaseDatasource):
     def default_query(qry):
         return qry.filter_by(is_sqllab_view=False)
 
+    @classmethod
+    def read_geojson(cls, column_name):
+        db_column = db.session.query(TableColumn).filter(TableColumn.column_name == column_name).first()
+        geojson_file = db_column.geojson_file
+        geojson_filter_name_key = db_column.geojson_filter_name_key
+        output = []
+        if geojson_file and geojson_filter_name_key:
+            with open(os.path.join(config['UPLOAD_FOLDER'], geojson_file)) as f:
+                geojson = json.loads(f.read())
+                output = [{'name': feature['properties'][geojson_filter_name_key],
+                            'geometry': feature['geometry']} for feature in geojson['features']]
+        return output
 
 sa.event.listen(SqlaTable, 'after_insert', security_manager.set_perm)
 sa.event.listen(SqlaTable, 'after_update', security_manager.set_perm)

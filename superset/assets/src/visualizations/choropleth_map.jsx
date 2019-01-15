@@ -375,7 +375,7 @@ class ChoroplethMap extends React.Component {
           mapStyle={this.props.slice.formData.mapbox_style}
           width={this.props.slice.width()}
           height={this.props.slice.height()}
-	  json={this.props.json}
+          json={this.props.json}
           slice={this.props.slice}
           onViewportChange={this.onViewportChange}
           mapboxApiAccessToken={this.props.json.data.mapboxApiKey}
