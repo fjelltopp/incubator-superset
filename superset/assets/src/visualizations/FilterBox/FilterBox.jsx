@@ -180,7 +180,14 @@ class FilterBox extends React.Component {
   renderFilters() {
     const { filtersFields, filtersChoices } = this.props;
     const { selectedValues } = this.state;
-
+    //Undo concat of table_name.column_name as a key in filter
+    Object.keys(selectedValues)
+        .filter(key => key.includes('.'))
+        .map(key => {
+              let new_key = key.split('.')[1];
+              selectedValues[new_key] = selectedValues[key];
+          delete selectedValues[key]}
+          );
     // Add created options to filtersChoices, even though it doesn't exist,
     // or these options will exist in query sql but invisible to end user.
     Object.keys(selectedValues)
