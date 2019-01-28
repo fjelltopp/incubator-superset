@@ -2762,7 +2762,8 @@ class ChoroplethMap(BaseDeckGLViz):
 
         from superset.connectors.sqla.models import SqlaTable
 
-        geojson_contents = SqlaTable.read_geojson(loc_col[0])
+        table_name = self.datasource.name
+        geojson_contents = SqlaTable.read_geojson_from_table(table_name, loc_col[0])
         for line in geojson_contents:
             output.append({"type": "Feature",
                            "properties": {"value": tmp_location_value.get(line['name'], 0)},

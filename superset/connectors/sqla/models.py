@@ -645,7 +645,6 @@ class SqlaTable(Model, BaseDatasource):
                     def geo_features_gen(values):
                         for value in values:
                             geojson_contents = self.read_geojson(col)
-
                             val_geo_ = [line['geometry'] for line in geojson_contents if line['name'] == value][0]
 
                             yield {"type": "feature", "geometry": val_geo_}
@@ -945,18 +944,31 @@ class SqlaTable(Model, BaseDatasource):
     def default_query(qry):
         return qry.filter_by(is_sqllab_view=False)
 
-    @classmethod
-    def read_geojson(cls, column_name):
-        db_column = db.session.query(TableColumn).filter(TableColumn.column_name == column_name).first()
+    @staticmethod
+    def read_geojson_from_table(table_name, column_name):
+        table_id = db.session.query(SqlaTable).filter(
+            SqlaTable.table_name == table_name
+        ).first().id
+        db_column = db.session.query(TableColumn).filter(and_(
+            TableColumn.table_id == table_id,
+            TableColumn.column_name == column_name
+        )).first()
         geojson_file = db_column.geojson_file
         geojson_filter_name_key = db_column.geojson_filter_name_key
         output = []
         if geojson_file and geojson_filter_name_key:
             with open(os.path.join(config['UPLOAD_FOLDER'], geojson_file)) as f:
                 geojson = json.loads(f.read())
-                output = [{'name': feature['properties'][geojson_filter_name_key],
-                            'geometry': feature['geometry']} for feature in geojson['features']]
+                output = [{
+                    'name': feature['properties'][geojson_filter_name_key],
+                    'geometry': feature['geometry']
+                    } for feature in geojson['features']]
         return output
+
+
+    def read_geojson(self, column_name):
+        return self.read_geojson_from_table(self.table_name, column_name)
+
 
 sa.event.listen(SqlaTable, 'after_insert', security_manager.set_perm)
 sa.event.listen(SqlaTable, 'after_update', security_manager.set_perm)
