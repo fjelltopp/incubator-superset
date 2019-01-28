@@ -641,10 +641,13 @@ class SqlaTable(Model, BaseDatasource):
             op = flt['op']
 
             if op == "geo_within" or flt['col'] == self.geo_column_name:
+                if '.' in col:
+                    table_id, col = col.split('.')
+                    table_id = table_id.split('__')[0]
                 if col in self.geofitlerable_column_names():
                     def geo_features_gen(values):
                         for value in values:
-                            geojson_contents = self.read_geojson(col)
+                            geojson_contents = self.read_geojson_from_table_id(table_id, col)
                             val_geo_ = [line['geometry'] for line in geojson_contents if line['name'] == value][0]
 
                             yield {"type": "feature", "geometry": val_geo_}
@@ -945,17 +948,14 @@ class SqlaTable(Model, BaseDatasource):
         return qry.filter_by(is_sqllab_view=False)
 
     @staticmethod
-    def read_geojson_from_table(table_name, column_name):
-        table_id = db.session.query(SqlaTable).filter(
-            SqlaTable.table_name == table_name
-        ).first().id
+    def read_geojson_from_table_id(table_id, column_name):
+        output = []
         db_column = db.session.query(TableColumn).filter(and_(
             TableColumn.table_id == table_id,
             TableColumn.column_name == column_name
         )).first()
         geojson_file = db_column.geojson_file
         geojson_filter_name_key = db_column.geojson_filter_name_key
-        output = []
         if geojson_file and geojson_filter_name_key:
             with open(os.path.join(config['UPLOAD_FOLDER'], geojson_file)) as f:
                 geojson = json.loads(f.read())
@@ -964,6 +964,13 @@ class SqlaTable(Model, BaseDatasource):
                     'geometry': feature['geometry']
                     } for feature in geojson['features']]
         return output
+
+    @staticmethod
+    def read_geojson_from_table(table_name, column_name):
+        table_id = db.session.query(SqlaTable).filter(
+            SqlaTable.table_name == table_name
+        ).first().id
+        return SqlaTable.read_geojson_from_table_id(table_id, column_name)
 
 
     def read_geojson(self, column_name):
