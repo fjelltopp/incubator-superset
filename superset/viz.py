@@ -2736,7 +2736,8 @@ class ChoroplethMap(BaseDeckGLViz):
     viz_type = 'choropleth_map'
     verbose_name = _('Choropleth Map')
     is_timeseries = False
-    
+    enforce_numerical_metrics = False
+
     def query_obj(self):
         fd = self.form_data
         if not fd.get('groupby_geofilterable'):

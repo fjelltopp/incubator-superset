@@ -1837,6 +1837,7 @@ export const visTypes = {
         controlSetRows: [
           ['groupby_geofilterable'],
           ['metric'],
+	  ['is_categorical'],
           ['row_limit', 'filter_nulls'],
           ['adhoc_filters'],
         ],
@@ -1852,7 +1853,8 @@ export const visTypes = {
       {
         label: t('Color Scheme'),
         controlSetRows: [
-          ['linear_color_scheme']
+          ['linear_color_scheme'],
+	  ['color_scheme'],
         ],
       },
       {
