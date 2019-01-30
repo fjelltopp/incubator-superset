@@ -1394,6 +1394,15 @@ export const controls = {
       'users to hit an [Apply] button'
     ),
   },
+  is_categorical: {
+    type: 'CheckboxControl',
+    label: t('Categorical Data'),
+    renderTrigger: false,
+    default: false,
+    description: (
+      'If the metric returns categorical data'
+    ),
+  },
 
   extruded: {
     type: 'CheckboxControl',

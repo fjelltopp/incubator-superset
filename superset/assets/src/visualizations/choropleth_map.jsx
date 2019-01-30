@@ -15,7 +15,7 @@ import SatelliteToggle from './SatelliteToggle'
 import { getColor } from '../modules/CategoricalColorNamespace';
 import {
   colorScalerFactory,
-  hexToRGB
+  hexToRGB,
 } from '../modules/colors';
 import {
   DEFAULT_LONGITUDE,
@@ -83,11 +83,31 @@ function addBgLayers(map, conf, accessToken) {
 }
 
 
-function determineColors(values, color_scheme){
-  const scaler = colorScalerFactory(color_scheme, values, accessor);
+
+
+function determineColors(values, form_data) {
+  const categorical = form_data.is_categorical;
+  if (categorical) {
+    const stops = [];
+    const stops_opacity = [];
+    const distinct = [];
+    for (const i in values){
+      const value = values[i];
+      if (!distinct.includes(value)) {
+	distinct.push(value);
+	const color = getColor(value, form_data.color_scheme);
+	stops.push([value, color]);
+	stops_opacity.push([value, 0.9]);
+      }
+
+    }
+    return {stops: stops, stops_opacity:stops_opacity}
+  }    
+  const scaler = colorScalerFactory(form_data.linear_color_scheme, values, accessor);
   const stops = scaler.ticks().map(x=> [x, scaler(x)]);
-  const stops_opacity = [ [0, 0], [stops[0][0], 0.9]];
-  return {stops: stops, stops_opacity:stops_opacity}
+  const stops_opacity = [[0, 0], [stops[0][0], 0.9]];
+  return {stops: stops, stops_opacity:stops_opacity};
+
 }
 
 function accessor(value, i, array) {
@@ -139,7 +159,6 @@ class MapGLDraw extends MapGL {
   componentDidMount() {
     this.props.onRef(this);
     super.componentDidMount();
-
     const map = this.getMap();
     const data = this.props.json.data.data;
     const values = this.props.json.data.values;
@@ -148,17 +167,29 @@ class MapGLDraw extends MapGL {
     const filters = this.props.slice.getFilters() || {};
     const addTooltips = this.addTooltips;
     const accessToken = this.props.mapboxApiAccessToken;
-    const color_scheme = this.props.json.form_data.linear_color_scheme;
+    const form_data = this.props.json.form_data;
 
+    
     map.on('load', function () {
       //Adds satellite layer
       map.addSource('streets-satellite', {
         type: 'raster',
         url:'mapbox://mapbox.streets-satellite'
+      })
+      // Displays the data distributions
+      addBgLayers(map,  geoJSONBgLayers, accessToken);
+      
+      map.addLayer({
+        'id' : 'streets-satellite',
+        'type' : 'raster',
+        'source' : 'streets-satellite',
+        'layout' : {
+          'visibility' : 'none'
+        }
       });
       // Displays the data distributions
       addBgLayers(map,  geoJSONBgLayers, accessToken);
-
+      
       map.addLayer({
         'id': 'streets-satellite',
         'type': 'raster',
@@ -168,24 +199,35 @@ class MapGLDraw extends MapGL {
         }
       });
 
-      const colors = determineColors(values, color_scheme);
-      map.addLayer({
-        id: 'polygons',
-        type: 'fill',
-        source: {
-          type: 'geojson',
-          data,
-        },
-        paint: {
-          'fill-color': {
-            'property': 'value',
-            'stops': colors.stops,
-          },
-          'fill-opacity': {
-            'property': 'value',
-            'stops': colors.stops_opacity,
-          }
-        }
+	const colors = determineColors(values, form_data);
+
+	const fill_color = {
+	  'property': 'value',
+	  'stops': colors.stops,
+	}
+
+	const fill_opacity = {
+	  'property': 'value',
+	  'stops': colors.stops_opacity,
+	}
+
+	if(form_data.is_categorical){
+	  fill_color.type = "categorical";
+	  fill_opacity.type = "categorical";
+	  fill_opacity.default = 0;
+	}
+	
+	map.addLayer({
+	  id: 'polygons',
+	  type: 'fill',
+	  source: {
+	  type: 'geojson',
+	  data,
+	},
+	paint: {
+	  'fill-color': fill_color,
+	  'fill-opacity': fill_opacity,
+	}
       });
       map.addLayer({
         id: 'polygons-lines',
@@ -307,7 +349,9 @@ class ChoroplethMap extends React.Component {
     this.toggleLayer = this.toggleLayer.bind(this);
     this.tick = this.tick.bind(this);
     this.updatePopup = this.updatePopup.bind(this);
-    const colorScale = determineColors(data.values, this.props.json.form_data.linear_color_scheme);
+    
+    
+    const colorScale = determineColors(data.values, this.props.json.form_data);
     this.colors = {};
     for (var i in colorScale.stops){
       var x = colorScale.stops[i];
