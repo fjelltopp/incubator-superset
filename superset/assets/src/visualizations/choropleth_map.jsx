@@ -52,7 +52,7 @@ function addBgLayers(map, conf, accessToken) {
         line: {
           'line-color': conf[key].color,
           'line-opacity': conf[key].opacity,
-      },
+        },
         fill: {
           'fill-color': conf[key].color,
           'fill-opacity': conf[key].opacity,
@@ -62,7 +62,7 @@ function addBgLayers(map, conf, accessToken) {
         },
       };
 
-      const layout = { visibility: 'none' };
+      const layout = {visibility: 'none'};
       if (conf[key]['fill-type'] === 'symbol') {
         layout['icon-image'] = conf[key].icon;
       }
@@ -88,131 +88,125 @@ function determineColors(values, color_scheme){
   const stops = scaler.ticks().map(x=> [x, scaler(x)]);
   const stops_opacity = [ [0, 0], [stops[0][0], 0.9]];
   return {stops: stops, stops_opacity:stops_opacity}
-
 }
 
-  function accessor(value, i, array){
+function accessor(value, i, array) {
     return value;
+}
+
+
+class MapGLDraw extends MapGL {
+  constructor(props) {
+    super(props);
+    this.addTooltips = this.addTooltips.bind(this);
+  }
+  addTooltips(layerName){
+    if (this.props.slice.formData.js_tooltip) {
+      const jsTooltip = sandboxedEval(this.props.slice.formData.js_tooltip);
+      const updatePopup = this.props.updatePopup;
+      this.getMap().on('click', layerName, function (e) {
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const properties = e.features[0].properties;
+
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+        updatePopup({
+          coordinates,
+          html: dompurify.sanitize(jsTooltip(properties)),
+        });
+      });
+    }
   }
 
+  // Toggles the visibiliity of a layer
+  toggleLayer(layer, visibility) {
+    const map = this.getMap();
+    map.setLayoutProperty(layer, 'visibility',
+                          visibility ? 'visible' : 'none');
+  }
+  getChildContext() {
+    return {
+      viewport: new WebMercatorViewport(this.props),
+      isDragging: this.state.isDragging,
+      eventManager: this._eventManager,
+    };
+  }
 
+  componentDidMount() {
+    this.props.onRef(this);
+    super.componentDidMount();
 
-  class MapGLDraw extends MapGL {
-    constructor(props) {
-      super(props);
-      this.addTooltips = this.addTooltips.bind(this);
-    }
-    addTooltips(layerName){
-      if (this.props.slice.formData.js_tooltip) {
-	const jsTooltip = sandboxedEval(this.props.slice.formData.js_tooltip);
-	const updatePopup = this.props.updatePopup;
-	this.getMap().on('click', layerName, function (e) {
-          const coordinates = e.features[0].geometry.coordinates.slice();
-          const properties = e.features[0].properties;
+    const map = this.getMap();
+    const data = this.props.json.data.data;
+    const values = this.props.json.data.values;
+    const geoJSONBgLayers = this.props.geoJSONBgLayers;
+    const slice = this.props.slice;
+    const filters = this.props.slice.getFilters() || {};
+    const addTooltips = this.addTooltips;
+    const accessToken = this.props.mapboxApiAccessToken;
+    const color_scheme = this.props.json.form_data.linear_color_scheme;
 
-          // Ensure that if the map is zoomed out such that multiple
-          // copies of the feature are visible, the popup appears
-          // over the copy being pointed to.
-          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-          }
-          updatePopup({
-            coordinates,
-            html: dompurify.sanitize(jsTooltip(properties)),
-          });
-	});
+    map.on('load', function () {
+      //Adds satellite layer
+      map.addSource('streets-satellite', {
+        type: 'raster',
+        url:'mapbox://mapbox.streets-satellite'
+      });
+      // Displays the data distributions
+      addBgLayers(map,  geoJSONBgLayers, accessToken);
 
-      }
-    }
-
-    // Toggles the visibiliity of a layer
-    toggleLayer(layer, visibility) {
-      const map = this.getMap();
-      map.setLayoutProperty(layer, 'visibility',
-                            visibility ? 'visible' : 'none');
-    }
-    getChildContext() {
-      return {
-	viewport: new WebMercatorViewport(this.props),
-	isDragging: this.state.isDragging,
-	eventManager: this._eventManager,
-      };
-    }
-
-    componentDidMount() {
-      this.props.onRef(this);
-      super.componentDidMount();
-
-      const map = this.getMap();
-      const data = this.props.json.data.data;
-      const values = this.props.json.data.values;
-      const geoJSONBgLayers = this.props.geoJSONBgLayers;
-      const slice = this.props.slice;
-      const filters = this.props.slice.getFilters() || {};
-      const addTooltips = this.addTooltips;
-      const accessToken = this.props.mapboxApiAccessToken;
-      const color_scheme = this.props.json.form_data.linear_color_scheme;
-
-      
-      map.on('load', function () {
-	//Adds satellite layer
-	map.addSource('streets-satellite', {
-          type: 'raster',
-          url:'mapbox://mapbox.streets-satellite'
-	})
-	// Displays the data distributions
-	addBgLayers(map,  geoJSONBgLayers, accessToken);
-
-	map.addLayer({
-          'id' : 'streets-satellite',
-          'type' : 'raster',
-          'source' : 'streets-satellite',
-          'layout' : {
-          'visibility' : 'none'
+      map.addLayer({
+        'id': 'streets-satellite',
+        'type': 'raster',
+        'source': 'streets-satellite',
+        'layout': {
+          'visibility': 'none'
         }
       });
 
-
       const colors = determineColors(values, color_scheme);
       map.addLayer({
-	id: 'polygons',
-	type: 'fill',
-	source: {
-	  type: 'geojson',
-	  data,
-	},
-	paint: {
-	  'fill-color': {
-	     'property': 'value',
-	     'stops': colors.stops,
-	  },
-	  'fill-opacity': {
-	     'property': 'value',
-	     'stops': colors.stops_opacity,
-	     }
-	}
+        id: 'polygons',
+        type: 'fill',
+        source: {
+          type: 'geojson',
+          data,
+        },
+        paint: {
+          'fill-color': {
+            'property': 'value',
+            'stops': colors.stops,
+          },
+          'fill-opacity': {
+            'property': 'value',
+            'stops': colors.stops_opacity,
+          }
+        }
       });
-
-       map.addLayer({
-	id: 'polygons-lines',
-	type: 'line',
-	source: {
-	  type: 'geojson',
-	  data,
-	},
-	paint: {
-	  'line-color': 'white',
-	  'line-opacity': 0.8
-	}
+      map.addLayer({
+        id: 'polygons-lines',
+        type: 'line',
+        source: {
+          type: 'geojson',
+          data,
+        },
+        paint: {
+          'line-color': 'white',
+          'line-opacity': 0.8
+        }
       });
 
       // Displays the polygon drawing/selection controls
       this.draw = new MapboxDraw({
-          displayControlsDefault: false,
-          controls: {
-              polygon: true,
-              trash: true,
-            },
+        displayControlsDefault: false,
+        controls: {
+          polygon: true,
+          trash: true,
+        },
       });
       addTooltips('polygons');
       map.addControl(this.draw, 'top-right');
@@ -225,7 +219,6 @@ function determineColors(values, color_scheme){
         }
       }
 
-
       function updateFilter(e) {
         let featureCollection = {};
         if (e.features.length > 0) {
@@ -235,9 +228,8 @@ function determineColors(values, color_scheme){
           };
         }
         slice.addFilter('geo', featureCollection,
-                        false, true, 'geo_within');
+          false, true, 'geo_within');
       }
-
 
       // Logs the polygon selection changes to console.
       map.on('draw.selectionchange', updateFilter);
@@ -256,8 +248,8 @@ function determineColors(values, color_scheme){
     }
     map.removeControl(this.draw);
   }
-
 }
+
 const childContextTypes = {
   viewport: PropTypes.instanceOf(WebMercatorViewport),
   isDragging: PropTypes.bool,
