@@ -52,7 +52,7 @@ function addBgLayers(map, conf, accessToken) {
         line: {
           'line-color': conf[key].color,
           'line-opacity': conf[key].opacity,
-      },
+        },
         fill: {
           'fill-color': conf[key].color,
           'fill-opacity': conf[key].opacity,
@@ -62,7 +62,7 @@ function addBgLayers(map, conf, accessToken) {
         },
       };
 
-      const layout = { visibility: 'none' };
+      const layout = {visibility: 'none'};
       if (conf[key]['fill-type'] === 'symbol') {
         layout['icon-image'] = conf[key].icon;
       }
@@ -82,10 +82,17 @@ function addBgLayers(map, conf, accessToken) {
   }
 }
 
-function accessor(value, i, array){
-  return value;
+
+function determineColors(values, color_scheme){
+  const scaler = colorScalerFactory(color_scheme, values, accessor);
+  const stops = scaler.ticks().map(x=> [x, scaler(x)]);
+  const stops_opacity = [ [0, 0], [stops[0][0], 0.9]];
+  return {stops: stops, stops_opacity:stops_opacity}
 }
 
+function accessor(value, i, array) {
+    return value;
+}
 
 
 class MapGLDraw extends MapGL {
@@ -112,7 +119,6 @@ class MapGLDraw extends MapGL {
           html: dompurify.sanitize(jsTooltip(properties)),
         });
       });
-
     }
   }
 
@@ -143,68 +149,64 @@ class MapGLDraw extends MapGL {
     const addTooltips = this.addTooltips;
     const accessToken = this.props.mapboxApiAccessToken;
     const color_scheme = this.props.json.form_data.linear_color_scheme;
-    
+
     map.on('load', function () {
       //Adds satellite layer
       map.addSource('streets-satellite', {
         type: 'raster',
         url:'mapbox://mapbox.streets-satellite'
-      })
+      });
       // Displays the data distributions
       addBgLayers(map,  geoJSONBgLayers, accessToken);
 
       map.addLayer({
-        'id' : 'streets-satellite',
-        'type' : 'raster',
-        'source' : 'streets-satellite',
-        'layout' : {
-          'visibility' : 'none'
+        'id': 'streets-satellite',
+        'type': 'raster',
+        'source': 'streets-satellite',
+        'layout': {
+          'visibility': 'none'
         }
       });
 
-      const scaler = colorScalerFactory(color_scheme, values, accessor)
-      const stops = scaler.ticks().map(x=> [x, scaler(x)])
-      const stops_opacity = [ [0, 0], [stops[0][0], 0.9]]
-      
+      const colors = determineColors(values, color_scheme);
       map.addLayer({
-	id: 'polygons',
-	type: 'fill',
-	source: {
-	  type: 'geojson',
-	  data,
-	},
-	paint: {
-	  'fill-color': {
-	     'property': 'value',
-	     'stops': stops
-	  },
-	  'fill-opacity': {
-	    'property': 'value',
-	    'stops': stops_opacity
-	  }
-	}
+        id: 'polygons',
+        type: 'fill',
+        source: {
+          type: 'geojson',
+          data,
+        },
+        paint: {
+          'fill-color': {
+            'property': 'value',
+            'stops': colors.stops,
+          },
+          'fill-opacity': {
+            'property': 'value',
+            'stops': colors.stops_opacity,
+          }
+        }
       });
-
-       map.addLayer({
-	id: 'polygons-lines',
-	type: 'line',
-	source: {
-	  type: 'geojson',
-	  data,
-	},
-	paint: {
-	  'line-color': 'white',
-	  'line-opacity': 0.8
-	}
+      map.addLayer({
+        id: 'polygons-lines',
+        type: 'line',
+        source: {
+          type: 'geojson',
+          data,
+        },
+        paint: {
+          'line-color': 'white',
+          'line-opacity': 0.8
+        }
       });
 
       // Displays the polygon drawing/selection controls
       this.draw = new MapboxDraw({
-          displayControlsDefault: false,
-          controls: {
-              polygon: true,
-              trash: true,
-            },
+        displayControlsDefault: false,
+        controls: {
+          polygon: true,
+          trash: true,
+        },
       });
       addTooltips('polygons');
       map.addControl(this.draw, 'top-right');
@@ -217,7 +219,6 @@ class MapGLDraw extends MapGL {
         }
       }
 
-
       function updateFilter(e) {
         let featureCollection = {};
         if (e.features.length > 0) {
@@ -227,9 +228,8 @@ class MapGLDraw extends MapGL {
           };
         }
         slice.addFilter('geo', featureCollection,
-                        false, true, 'geo_within');
+          false, true, 'geo_within');
       }
-
 
       // Logs the polygon selection changes to console.
       map.on('draw.selectionchange', updateFilter);
@@ -248,8 +248,8 @@ class MapGLDraw extends MapGL {
     }
     map.removeControl(this.draw);
   }
-
 }
+
 const childContextTypes = {
   viewport: PropTypes.instanceOf(WebMercatorViewport),
   isDragging: PropTypes.bool,
@@ -307,11 +307,11 @@ class ChoroplethMap extends React.Component {
     this.toggleLayer = this.toggleLayer.bind(this);
     this.tick = this.tick.bind(this);
     this.updatePopup = this.updatePopup.bind(this);
-    const scaler = colorScalerFactory(this.props.json.form_data.linear_color_scheme, data.values, accessor)
-    this.colors = {}
-
-    for (var x in scaler.ticks(5)){
-      this.colors[x] = {color: hexToRGB(scaler(x)), enabled: true}
+    const colorScale = determineColors(data.values, this.props.json.form_data.linear_color_scheme);
+    this.colors = {};
+    for (var i in colorScale.stops){
+      var x = colorScale.stops[i];
+      this.colors[x[0]] = {color: hexToRGB(x[1]), enabled: true};
 
     }
     // this.toggleSatellite = this.toggleSatellite.bind(this);
