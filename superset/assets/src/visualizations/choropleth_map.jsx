@@ -78,7 +78,7 @@ function addBgLayers(map, conf, accessToken) {
         paint: paint[conf[key]['fill-type']],
         layout,
       });
-    ;
+    }
   }
 }
 
