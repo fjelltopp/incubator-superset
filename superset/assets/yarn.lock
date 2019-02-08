@@ -11254,10 +11254,10 @@ react@^16.4.1:
     prop-types "^15.6.2"
     schedule "^0.3.0"
 
-reactable@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/reactable/-/reactable-1.1.0.tgz#2f84bb8b3808df8ac64694b539be416438db8498"
-  integrity sha512-SnvZ3CXyFFxGotw9cqNiVUGb2oW16UlIypGQZRJGgPiJuFqW22jO7A+Y/Tvv8no8F/bZoLdZ+QJP7eZfcc9kCw==
+reactable-arc@0.14.42:
+  version "0.14.42"
+  resolved "https://registry.yarnpkg.com/reactable-arc/-/reactable-arc-0.14.42.tgz#a7864e331fe3b80d9d6237392d5275a17e79bb1e"
+  integrity sha512-dYWTX+JdknG/DgQlqbjf4ZIJj2z6blEfl7gqTNsLD66gcM+YrgRsTbl4S0E71/iPzfgGujxyk3TLilbozx9c9Q==
 
 reactcss@^1.2.0:
   version "1.2.3"

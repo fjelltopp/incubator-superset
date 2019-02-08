@@ -7,7 +7,7 @@ import sql from 'react-syntax-highlighter/languages/hljs/sql';
 import json from 'react-syntax-highlighter/languages/hljs/json';
 import github from 'react-syntax-highlighter/styles/hljs/github';
 import { DropdownButton, MenuItem, Row, Col, FormControl } from 'react-bootstrap';
-import { Table } from 'reactable';
+import { Table } from 'reactable-arc';
 import $ from 'jquery';
 
 import CopyToClipboard from './../../components/CopyToClipboard';
