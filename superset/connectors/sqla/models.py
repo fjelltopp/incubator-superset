@@ -661,19 +661,22 @@ class SqlaTable(Model, BaseDatasource):
                     flt["val"] = new_flt_geo_values
                     flt["col"] = self.geo_column_name
 
-                col = self.geo_column_name
-                col_obj = cols.get(col)
-                features = flt.get('val')["features"]
+                    col = self.geo_column_name
+                    col_obj = cols.get(col)
+                    features = flt.get('val')["features"]
 
-                shapes = [geometry.shape(feature["geometry"]) for feature in features]
-                total_shape = ops.cascaded_union(shapes)
-                eq = total_shape
-                where_clause_and.append(
-                    sa.func.ST_COVERS(
-                        sa.func.ST_GeogFromText(eq.wkt),
-                        sa.cast(cols.get(col).get_sqla_col(), Geometry)
+                    shapes = [geometry.shape(feature["geometry"]) for feature in features]
+                    total_shape = ops.cascaded_union(shapes)
+                    eq = total_shape
+                    where_clause_and.append(
+                        sa.func.ST_COVERS(
+                            sa.func.ST_GeogFromText(eq.wkt),
+                            sa.cast(cols.get(col).get_sqla_col(), Geometry)
+                        )
                     )
-                )
+                else:
+                    op = "in"
+                    col_obj = cols.get(col)
             if col_obj:
                 is_list_target = op in ('in', 'not in')
                 eq = self.filter_values_handler(
