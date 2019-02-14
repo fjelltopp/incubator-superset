@@ -639,27 +639,27 @@ class SqlaTable(Model, BaseDatasource):
             col = flt['col']
             col_obj = cols.get(col)
             op = flt['op']
-
             if op == "geo_within" or flt['col'] == self.geo_column_name:
                 if '.' in col:
                     table_id, col = col.split('.')
                     table_id = table_id.split('__')[0]
                 if col in self.geofitlerable_column_names():
-                    def geo_features_gen(values):
-                        for value in values:
-                            geojson_contents = self.read_geojson_from_table_id(table_id, col)
-                            val_geo_ = [line['geometry'] for line in geojson_contents if line['name'] == value][0]
+                    if col != 'geo':
+                        def geo_features_gen(values):
+                            for value in values:
+                                geojson_contents = self.read_geojson_from_table_id(table_id, col)
+                                val_geo_ = [line['geometry'] for line in geojson_contents if line['name'] == value][0]
 
-                            yield {"type": "feature", "geometry": val_geo_}
+                                yield {"type": "feature", "geometry": val_geo_}
 
-                    old_vals_ = flt.get('val')
-                    logging.info(old_vals_)
-                    new_flt_geo_values = {
-                        "features": list(geo_features_gen(old_vals_))
-                    }
+                        old_vals_ = flt.get('val')
+                        logging.info(old_vals_)
+                        new_flt_geo_values = {
+                            "features": list(geo_features_gen(old_vals_))
+                        }
 
-                    flt["val"] = new_flt_geo_values
-                    flt["col"] = self.geo_column_name
+                        flt["val"] = new_flt_geo_values
+                        flt["col"] = self.geo_column_name
 
                     col = self.geo_column_name
                     col_obj = cols.get(col)
@@ -847,7 +847,9 @@ class SqlaTable(Model, BaseDatasource):
     def geofitlerable_column_names(self):
         geofilterable_columns = db.session.query(TableColumn).join(SqlaTable).filter(
             TableColumn.geofilterable == True).all()
-        return { col.column_name  for col in geofilterable_columns }
+        column_names_set = {col.column_name for col in geofilterable_columns}
+        column_names_set.add("geo")
+        return column_names_set
 
     def get_sqla_table_object(self):
         return self.database.get_table(self.table_name, schema=self.schema)
