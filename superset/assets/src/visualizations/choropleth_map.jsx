@@ -91,13 +91,13 @@ function determineColors(values, form_data) {
     const stops = [];
     const stops_opacity = [];
     const distinct = [];
-    for (const i in values){
+    for (const i in values) {
       const value = values[i];
       if (!distinct.includes(value)) {
-	distinct.push(value);
-	const color = getColor(value, form_data.color_scheme);
-	stops.push([value, color]);
-	stops_opacity.push([value, 0.9]);
+        distinct.push(value);
+        const color = getColor(value, form_data.color_scheme);
+        stops.push([value, color]);
+        stops_opacity.push([value, 0.9]);
       }
 
     }
