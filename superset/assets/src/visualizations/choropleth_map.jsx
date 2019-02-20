@@ -101,8 +101,15 @@ function determineColors(values, form_data) {
       }
 
     }
-    return {stops: stops, stops_opacity:stops_opacity}
-  }    
+    return {stops: stops, stops_opacity: stops_opacity}
+  }
+  //Workaround: colorScalerFactory fails to generate scaler for a single value
+  //I push incremented value to achive at least two unique elements in values
+  let set = new Set(values);
+  if (set.size < 2) {
+    let extra = values[0] + 1;
+    values.push(extra);
+  }
   const scaler = colorScalerFactory(form_data.linear_color_scheme, values, accessor);
   const stops = scaler.ticks().map(x=> [x, scaler(x)]);
   const stops_opacity = [[0, 0], [stops[0][0], 0.9]];
