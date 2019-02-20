@@ -91,18 +91,25 @@ function determineColors(values, form_data) {
     const stops = [];
     const stops_opacity = [];
     const distinct = [];
-    for (const i in values){
+    for (const i in values) {
       const value = values[i];
       if (!distinct.includes(value)) {
-	distinct.push(value);
-	const color = getColor(value, form_data.color_scheme);
-	stops.push([value, color]);
-	stops_opacity.push([value, 0.9]);
+        distinct.push(value);
+        const color = getColor(value, form_data.color_scheme);
+        stops.push([value, color]);
+        stops_opacity.push([value, 0.9]);
       }
 
     }
-    return {stops: stops, stops_opacity:stops_opacity}
-  }    
+    return {stops: stops, stops_opacity: stops_opacity}
+  }
+  //Workaround: colorScalerFactory fails to generate scaler for a single value
+  //I push incremented value to achive at least two unique elements in values
+  let set = new Set(values);
+  if (set.size < 2) {
+    let extra = values[0] + 1;
+    values.push(extra);
+  }
   const scaler = colorScalerFactory(form_data.linear_color_scheme, values, accessor);
   const stops = scaler.ticks().map(x=> [x, scaler(x)]);
   const stops_opacity = [[0, 0], [stops[0][0], 0.9]];
